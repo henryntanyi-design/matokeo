@@ -52,7 +52,8 @@ body{background:#f3f5fb}
 .side .nav-link.active{background:rgba(255,255,255,.16);color:#fff;border-left-color:#ffc107;font-weight:600}
 .main{margin-left:250px}
 .topbar{background:#fff;border-bottom:1px solid #e6e9f2;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(11,61,145,.05)}
-.topbar-brand{display:flex;align-items:center;gap:12px;min-width:0}
+.topbar-brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto;overflow:hidden}
+.topbar-text{min-width:0;flex:1 1 auto;overflow:hidden}
 .topbar-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#0b3d91,#2c6ed5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.25)}
 .topbar-logo{width:46px;height:46px;object-fit:contain;border-radius:12px;background:linear-gradient(135deg,#0b3d91,#2c6ed5);padding:4px;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.18)}
 .topbar-title{font-weight:700;color:#0b3d91;font-size:1.02rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -92,7 +93,15 @@ body{background:#f3f5fb}
 @keyframes flashIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 @keyframes flashOut{to{opacity:0;transform:translateY(-8px)}}
 .side .nav{overflow-y:auto;max-height:calc(100vh - 96px)}
-@media(max-width:767px){.side{display:none}.main{margin-left:0}.topbar{padding:8px 14px}}
+@media(max-width:767px){.side{display:none}.main{margin-left:0}
+  .topbar{padding:8px 14px;flex-wrap:nowrap;gap:10px}
+  .topbar-brand{gap:9px}
+  .topbar-logo{width:38px;height:38px;border-radius:10px;padding:3px}
+  .topbar-title{font-size:.9rem;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .topbar-sub{font-size:.68rem;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .topbar-sub .mx-2{margin-left:.2rem!important;margin-right:.2rem!important}
+  .topbar>.d-flex{gap:6px!important;flex:0 0 auto}
+  .user-chip{max-width:52vw}}
 @media print{.side,.topbar,.no-print{display:none!important}.main{margin-left:0!important}}
 </style></head><body>
 <div class="side"><div class="brand"><img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo"><div class="brand-text"><?php echo h(system_name()); ?></div></div>
@@ -104,7 +113,7 @@ body{background:#f3f5fb}
   <div class="topbar">
     <div class="topbar-brand">
       <img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo" class="topbar-logo">
-      <div>
+      <div class="topbar-text">
         <div class="topbar-title"><?php echo h(system_name()); ?></div>
         <div class="topbar-sub"><i class="bi bi-geo-alt-fill me-1"></i><?php echo h($sc['district'] ?? ''); ?><?php echo !empty($sc['region']) ? ', ' . h($sc['region']) : ''; ?><?php if (!empty($sc['centre_no'])): ?><span class="mx-2">|</span><?php echo h($sc['centre_no']); ?><span class="mx-2">-</span><?php echo h($sc ? $sc['name'] . ' SECONDARY SCHOOL' : ($u && $u['role'] === 'super' ? 'Ngazi ya Wilaya' : $title)); ?>
                       <?php endif; ?>
