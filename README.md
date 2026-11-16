@@ -24,16 +24,18 @@ PHP 7.4+ / MySQL-MariaDB. Folda: `matokeo`; database: `matokeo_db` (haiingiliani
 ## Kuweka mtandaoni (deploy kwa FTP)
 Kila `git push` kwenye branch `main` inapeleka mabadiliko kwenye shared hosting kiotomatiki kupitia GitHub Actions (`.github/workflows/deploy.yml`). Workflow hujenga `vendor/` (kwa kuwa haipo Git) kisha hupakia kwa FTP faili zilizobadilika pekee.
 
-**Mara moja: GitHub → Settings → Secrets and variables → Actions** — ongeza secrets hizi nne:
+**Mara moja: GitHub → Settings → Secrets and variables → Actions** — ongeza secrets/secrets hizi:
 
-| Secret | Thamani | Mfano |
-|---|---|---|
-| `FTP_SERVER` | hostname ya FTP (bila `ftp://`) | `ftp.shule.ac.tz` |
-| `FTP_USERNAME` | mtumiaji wa FTP (tengeneza akaunti maalum kwenye cPanel → FTP Accounts, ipe folda ya site pekee) | `deploy@shule.ac.tz` |
-| `FTP_PASSWORD` | nenosiri la akaunti hiyo | — |
-| `FTP_SERVER_DIR` | folda ya site kwenye server, **mwisho uwe na `/`** | `public_html/matokeo/` |
+| Jina la secret/variable | Aina | Thamani | Mfano |
+|---|---|---|---|
+| `FTP_SERVER` | secret | hostname ya FTP (bila `ftp://`) | `ftp.shule.ac.tz` |
+| `FTP_USER` au `FTP_USERNAME` | secret | mtumiaji wa FTP (tengeneza akaunti maalum kwenye cPanel → FTP Accounts, ipe folda ya site pekee). Workflow inatumia yoyote uliyoweka. | `deploy@shule.ac.tz` |
+| `FTP_PASS` | secret | nenosiri la akaunti hiyo | — |
+| `FTP_SERVER_DIR` | variable au secret | folda ya site kwenye server, **mwisho uwe na `/`** | `public_html/matokeo/` |
 
-Kisha *Actions → "Deploy kwa FTP" → Run workflow* kuendesha mara ya kwanza kwa mkono.
+`FTP_SERVER_DIR` inaweza kuwekwa kama **repository variable** au **secret**. Ikiwa haijawekwa, workflow inatumia `./public_html/` kiotomatiki.
+
+Kisha *Actions → "Deploy to Namecheap" → Run workflow* kuendesha mara ya kwanza kwa mkono.
 
 **Mara moja: kwenye server**
 1. phpMyAdmin → Import `database/schema.sql`, kisha migrations unazohitaji (tazama sehemu za chini).
@@ -47,6 +49,8 @@ Kisha *Actions → "Deploy kwa FTP" → Run workflow* kuendesha mara ya kwanza k
 - Usiweke `dangerous-clean-slate: true` kwenye workflow — itafuta `config.local.php` na faili za uploads zilizo kwenye server.
 - FTP ni ya maandishi wazi; ikiwa hosting inaunga mkono, washa `protocol: ftps` kwenye workflow na tumia HTTPS kila mahali.
 - Deploy ya kwanza ni ndefu (inapakia `vendor/`); baadaye ni faili zilizobadilika tu, kwa kawaida dakika 1–2. Ufuatilie kwenye *Actions*.
+- Workflow inaweza kuzima kabla ya kupakia ikiwa `FTP_SERVER`, `FTP_PASS`, au jina lolote la mtumiaji wa FTP halipo. Angalia maazisho ya run kwenye *Actions*.
+- Ili kubadilika zionekane kwenye `oasis.online` (au nude yoyote unayotumia), domain yenyewe lazima iendelee kwenye hosting account hii na ikae kwenye folda inayotumika na deploy. Utafiti wa DNS ulionyesha `oasis.online` iko kwenye Sedo parking; haikuingia kwenye host. Ona sehemu ya maelezo mwanzoni kwa maelekezo ya jinsi ya kurekebisha DNS na document root.
 
 ## Mpangilio wa kazi
 **Wilaya (super):** Schools → ongeza shule (+ akaunti ya admin wa shule) → Classes/Subjects/Grading (kama inahitajika) → District Exams → chagua madarasa na shule → baada ya shule kuingiza alama: *Matokeo ya wilaya* (council) → chapisha.

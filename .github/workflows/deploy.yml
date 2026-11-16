@@ -9,18 +9,32 @@ jobs:
   deploy:
     name: FTP Deploy
     runs-on: ubuntu-latest
+
     steps:
       - name: Pata code
         uses: actions/checkout@v4
 
-      - name: Peleka faili kwa FTP
+      - name: Jenga Composer vendor/
+        run: composer install --no-interaction --no-progress --optimize-autoloader
+
+      - name: Angalia FTP credentials
+        if: ${{ !secrets.FTP_SERVER || !secrets.FTP_PASS || (!secrets.FTP_USER && !secrets.FTP_USERNAME) }}
+        run: |
+          echo "Missing required FTP secrets."
+          echo "Set these in GitHub repo Settings -> Secrets and variables -> Actions -> Secrets:"
+          echo "  FTP_SERVER"
+          echo "  FTP_PASS"
+          echo "  FTP_USER or FTP_USERNAME"
+          echo "Optional: FTP_SERVER_DIR (variable or secret) - defaults to ./public_html/"
+          exit 1
+
+      - name: Paka faili kwa FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USER }}
+          username: ${{ secrets.FTP_USER || secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASS }}
-          # FTP huingia kwenye home ya akaunti, si public_html; site iko public_html/ (ona .cpanel.yml).
-          server-dir: ./public_html/
+          server-dir: ${{ vars.FTP_SERVER_DIR || secrets.FTP_SERVER_DIR || './public_html/' }}
           exclude: |
             **/.git*
             **/.git*/**
@@ -28,3 +42,28 @@ jobs:
             README.md
             config.example.php
             .cpanel.yml
+
+      - name: Weka kitufe cha uhakiki cha deploy
+        run: |
+          echo "sha=${{ github.sha }}" > .deploy-check.txt
+          echo "workflow=Deploy to Namecheap" >> .deploy-check.txt
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> .deploy-check.txt
+          echo "server-dir=${{ vars.FTP_SERVER_DIR || secrets.FTP_SERVER_DIR || './public_html/' }}" >> .deploy-check.txt
+
+      - name: Paka kitufe cha uhakiki
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USER || secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASS }}
+          server-dir: ${{ vars.FTP_SERVER_DIR || secrets.FTP_SERVER_DIR || './public_html/' }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            README.md
+            config.example.php
+            .cpanel.yml
+            vendor/**
+          additional-files: |
+            .deploy-check.txt
