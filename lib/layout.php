@@ -36,6 +36,10 @@ function layout_start($title, $active = '', $pageLabel = null) {
     $whoIni = $words && $words[0] !== '' ? strtoupper($ch($words[0]) . (count($words) > 1 ? $ch(end($words)) : '')) : '';
     $items = nav_items();
     $sc = active_school();
+    /* Kifupi cha jina la mfumo kwa topbar ya simu: huichukua herufi zilizo kwenye mabano, mf. "... (OASIS)". */
+    $appName = system_name();
+    $appShort = $appName;
+    if (preg_match('/\(([^)]{2,14})\)\s*$/', $appName, $mm)) $appShort = strtoupper(trim($mm[1]));
     ?><!DOCTYPE html>
 <html lang="sw"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboards | OASIS</title>
@@ -55,7 +59,7 @@ body{background:#f3f5fb}
 .topbar-brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto;overflow:hidden}
 .topbar-text{min-width:0;flex:1 1 auto;overflow:hidden}
 .topbar-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#0b3d91,#2c6ed5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.25)}
-.topbar-logo{width:46px;height:46px;object-fit:contain;border-radius:12px;background:linear-gradient(135deg,#0b3d91,#2c6ed5);padding:4px;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.18)}
+.topbar-logo{width:46px;height:46px;object-fit:contain;border-radius:12px;background:transparent;padding:0;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.18)}
 .topbar-title{font-weight:700;color:#0b3d91;font-size:1.02rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar-sub{font-size:.76rem;color:#6c757d;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 .topbar-page{font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:#6c757d;font-weight:600}
@@ -110,7 +114,7 @@ body{background:#f3f5fb}
   .topbar-menu{display:inline-flex}
   .topbar{padding:8px 14px;flex-wrap:nowrap;gap:10px}
   .topbar-brand{gap:9px}
-  .topbar-logo{width:38px;height:38px;border-radius:10px;padding:3px}
+  .topbar-logo{width:38px;height:38px;border-radius:10px;padding:0}
   .topbar-title{font-size:.9rem;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .topbar-sub{font-size:.68rem;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .topbar-sub .mx-2{margin-left:.2rem!important;margin-right:.2rem!important}
@@ -129,7 +133,7 @@ body{background:#f3f5fb}
       <button class="topbar-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="Fungua menyu"><i class="bi bi-list"></i></button>
       <img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo" class="topbar-logo">
       <div class="topbar-text">
-        <div class="topbar-title"><?php echo h(system_name()); ?></div>
+        <div class="topbar-title"><span class="d-none d-md-inline"><?php echo h($appName); ?></span><span class="d-md-none"><?php echo h($appShort); ?></span></div>
         <div class="topbar-sub"><i class="bi bi-geo-alt-fill me-1"></i><?php echo h($sc['district'] ?? ''); ?><?php echo !empty($sc['region']) ? ', ' . h($sc['region']) : ''; ?><?php if (!empty($sc['centre_no'])): ?><span class="mx-2">|</span><?php echo h($sc['centre_no']); ?><span class="mx-2">-</span><?php echo h($sc ? $sc['name'] . ' SECONDARY SCHOOL' : ($u && $u['role'] === 'super' ? 'Ngazi ya Wilaya' : $title)); ?>
                       <?php endif; ?>
                 </div>
