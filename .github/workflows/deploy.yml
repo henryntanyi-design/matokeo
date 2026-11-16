@@ -19,7 +19,8 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          server-dir: ./
+          # FTP huingia kwenye home ya akaunti, si public_html; site iko public_html/ (ona .cpanel.yml).
+          server-dir: ./public_html/
           exclude: |
             **/.git*
             **/.git*/**
