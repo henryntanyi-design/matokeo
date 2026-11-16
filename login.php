@@ -146,7 +146,7 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
           <li><i class="bi bi-shield-check"></i> Secure school records</li>
         </ul>
       </div>
-      <div class="z lg-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?> &middot; iEPAS</div>
+      <div class="z lg-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?></div>
     </aside>
 
     <main class="lg-form">
@@ -177,7 +177,7 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
           <a href="?t=staff" class="text-primary">Staff <i class="bi bi-arrow-right-short"></i></a>
         <?php endif; ?>
       </div>
-      <div class="lg-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?> &middot; iEPAS</div>
+      <div class="lg-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?></div>
     </main>
   </div>
 </div>

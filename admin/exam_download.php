@@ -1,7 +1,7 @@
 <?php
 /**
  * Upakuaji wa nyaraka za mtihani (CAL, ISAL, Registered Candidates Stats, Sitting Plan)
- * kwa muundo wa iEPAS.
+ * kwa muundo wa OASIS.
  */
 require_once __DIR__ . '/../lib/grading.php';
 require_once __DIR__ . '/../lib/exam_docs.php';
@@ -61,7 +61,7 @@ if ($type === 'stats_all') {
         $wb = xlsx_registered_stats_schools($exam, $schools, array_values($allSubs), $rows);
         $reg = strtoupper(trim((string)($schools[0]['region'] ?? '')));
         $dist = strtoupper(trim((string)($schools[0]['district'] ?? '')));
-        send_xlsx($wb, 'iEPAS-' . ($reg !== '' ? $reg . '_' : '') . ($dist !== '' ? $dist . '_' : '') . 'REGISTERED_CANDIDATES_STATS');
+        send_xlsx($wb, 'OASIS-' . ($reg !== '' ? $reg . '_' : '') . ($dist !== '' ? $dist . '_' : '') . 'REGISTERED_CANDIDATES_STATS');
     } catch (Exception $e) {
         http_response_code(500);
         die(h($e->getMessage()));
@@ -89,7 +89,7 @@ foreach ($classes as $c) {
     if ((int)$c['id'] === $class_id) { $class = $c; break; }
 }
 
-$tag = 'iEPAS-' . school_centre($sc) . '_' . exam_doc_short_school($sc) . ' SECONDARY SCHOOL';
+$tag = 'OASIS-' . school_centre($sc) . '_' . exam_doc_short_school($sc) . ' SECONDARY SCHOOL';
 
 try {
     if ($type === 'cal' || $type === 'sitting' || $type === 'isal') {

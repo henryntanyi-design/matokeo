@@ -18,14 +18,14 @@ define('DB_USER', 'root');
 define('DB_PASS', '');            // Weka nenosiri halisi; usiipush popote
 
 // ===== Mfumo =====
-// define('APP_NAME', 'Mfumo wa Matokeo');
+// define('APP_NAME', 'Operations & Academic School Information (OASIS)');
 // define('TIMEZONE', 'Africa/Dar_es_Salaam');
 // define('BASE_URL', '/matokeo');   // Washa tu kama viungo havifanyi kazi
 
 // ===== Barua pepe (hiari) =====
 // define('APP_URL', 'http://localhost/matokeo');   // Inapendekezwa kuiweka
 // define('MAIL_FROM', 'no-reply@shule.go.tz');
-// define('MAIL_FROM_NAME', 'Mfumo wa Matokeo');
+// define('MAIL_FROM_NAME', 'Operations & Academic School Information (OASIS)');
 // define('MAIL_LOG', false);        // true = hifadhi barua kwenye storage/mail.log
 
 // SMTP (inahitaji "composer install" kwa PHPMailer):

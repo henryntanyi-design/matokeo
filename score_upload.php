@@ -105,7 +105,7 @@ $sub = ($subject_id && isset($subs[$subject_id])) ? $subs[$subject_id] : null;
 $sheetCands = ($class && $sub) ? score_sheet_candidates($exam_id, $school_id, $class_id, $subject_id) : [];
 $regIds = ($class && $sub) ? subject_registered_ids($school_id, $class_id, $subject_id) : null;
 
-/* ---- Template Rasmi ya Somo Husika (format ya iEPAS) ----
+/* ---- Template Rasmi ya Somo Husika (format ya OASIS) ----
    Template hii inatumia faili la msingi lililopo kwenye storage/templates/iepas_score_template.xlsx.
    Maeneo yenye "JINA LA SHULE", "JINA LA MTIHANI", "JINA LA SOMO" na "KIDATO CHA MTIHANI"
    hujazwa kiotomatiki kwa taarifa za shule, mtihani, somo na kidato husika. */
@@ -209,7 +209,7 @@ if ($class && $sub && isset($_GET['download'])) {
         $s = trim(preg_replace('/[^A-Za-z0-9]+/', '_', strtoupper((string)$s)), '_');
         return $s === '' ? 'ITEM' : substr($s, 0, $max);
     };
-    $fname = 'iEPAS_' . $slug($school_name, 30) . '_' . $slug($class_name, 20) . '_' . $slug($subject_name, 30) . '_' . $slug($exam_name, 40);
+    $fname = 'OASIS_' . $slug($school_name, 30) . '_' . $slug($class_name, 20) . '_' . $slug($subject_name, 30) . '_' . $slug($exam_name, 40);
 
     send_xlsx($wb, $fname);
 }

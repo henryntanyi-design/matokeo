@@ -31,7 +31,7 @@ function xlsx_letter($index) {
 }
 
 /**
- * "Overall Results": muundo wa template ya iEPAS (division summary, subject performance
+ * "Overall Results": muundo wa template ya OASIS (division summary, subject performance
  * summary, centre ranking na jedwali la watahiniwa lenye MARKS/GRADE kwa kila somo).
  */
 function xlsx_school(array $d, $names = true) {

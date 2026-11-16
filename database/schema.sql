@@ -1,5 +1,5 @@
 -- ============================================================
--- MFUMO WA MATOKEO (SHULE NYINGI) - Database kamili
+-- OPERATIONS & ACADEMIC SCHOOL INFORMATION (OASIS) - Database kamili
 -- Import kupitia phpMyAdmin > Import (itaunda database `matokeo_db`)
 -- ============================================================
 CREATE DATABASE IF NOT EXISTS `matokeo_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -387,7 +387,7 @@ CREATE TABLE IF NOT EXISTS `timetable_entries` (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ================= DATA ZA MSINGI =================
-INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES ('system_name', 'Mfumo wa Matokeo');
+INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES ('system_name', 'Operations & Academic School Information (OASIS)');
 
 INSERT INTO `classes` (`name`, `level`, `sort_order`) VALUES
  ('Form I','O',1), ('Form II','O',2), ('Form III','O',3), ('Form IV','O',4), ('Form V','A',5), ('Form VI','A',6);

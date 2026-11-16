@@ -3,7 +3,7 @@ require_once __DIR__ . '/../lib/export.php';
 require_once __DIR__ . '/../lib/layout.php';
 require_school_admin(); $school_id = active_school_id();
 
-/** Safu zinazohitajika kwenye template ya iEPAS (zenye rangi + PREMS_NO). */
+/** Safu zinazohitajika kwenye template ya OASIS (zenye rangi + PREMS_NO). */
 const SIM_REQUIRED = ['PREMSNO', 'FIRSTNAME', 'LASTNAME', 'SEX', 'CLASS', 'GUARDIANNAME', 'GUARDIANPHONE'];
 
 function sim_cell_str($v) {
@@ -88,7 +88,7 @@ foreach (q_all('SELECT admission_no FROM students WHERE school_id = ?', [$school
 }
 
 /*
- * Template ya iEPAS yenye taarifa za shule inayopakua.
+ * Template ya OASIS yenye taarifa za shule inayopakua.
  * Inatumiwa na faili la kwenye server; itakupa template yenye rangi na vichwa vya lazima.
  */
 if (isset($_GET['template'])) {
@@ -132,7 +132,7 @@ if (isset($_GET['template'])) {
     $ws->getStyle('M6:M' . $maxRow)->getNumberFormat()->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
 
     $centrePart = $centre !== '' ? $centre . '_' : '';
-    send_xlsx($wb, 'iEPAS-' . $centrePart . $schoolFull . "-STUDENT'S UPLOAD_Template");
+    send_xlsx($wb, 'OASIS-' . $centrePart . $schoolFull . "-STUDENT'S UPLOAD_Template");
 }
 
 /* ---------- Pakua faili la marekebisho (lenye makosa) ---------- */

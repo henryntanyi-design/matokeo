@@ -1,4 +1,4 @@
-# Mfumo wa Matokeo - SHULE NYINGI (Wilaya + Shule + Walimu + Wanafunzi)
+# Operations & Academic School Information (OASIS) - SHULE NYINGI (Wilaya + Shule + Walimu + Wanafunzi)
 
 Mfumo kamili wa shule nyingi: usajili wa wanafunzi, madarasa, masomo, walimu, mitihani ya wilaya na ya shule, alama, matokeo ya mtindo wa NECTA, ulinganisho wa shule (matokeo ya wilaya), export ya PDF/Excel, na portal ya mwanafunzi.
 PHP 7.4+ / MySQL-MariaDB. Folda: `matokeo`; database: `matokeo_db` (haiingiliani na mfumo wako wa zamani `ngais`).
@@ -52,10 +52,10 @@ Kisha *Actions → "Deploy kwa FTP" → Run workflow* kuendesha mara ya kwanza k
 **Wilaya (super):** Schools → ongeza shule (+ akaunti ya admin wa shule) → Classes/Subjects/Grading (kama inahitajika) → District Exams → chagua madarasa na shule → baada ya shule kuingiza alama: *Matokeo ya wilaya* (council) → chapisha.
 **Shule (admin):** Teachers (orodha ya walimu → *Register teacher*) → Assignments (stream maalum) → Students (import) → Exams → mtihani (chagua **kidato kwa check box**, kisha **masomo ya mtihani** kwa kila kidato) → *Sajili watahiniwa* → walimu waingize alama → Matokeo → *Chapisha kwa wanafunzi* → toa PIN (Students → PIN).
 
-Kichwa cha juu (topbar) huonyesha **jina la mfumo (iEPAS)** kama kichwa kikuu na **jina la shule** chini yake; ukurasa wa dashboard una hero yenye jina la shule, mkoa/wilaya, centre no na vitufe vya mkato.
+Kichwa cha juu (topbar) huonyesha **jina la mfumo (OASIS)** kama kichwa kikuu na **jina la shule** chini yake; ukurasa wa dashboard una hero yenye jina la shule, mkoa/wilaya, centre no na vitufe vya mkato.
 
-### Usajili wa wanafunzi kwa Excel (iEPAS)
-Kwenye *Students → Import (Excel)* bofya **Pakua template (.xlsx)**. Template hutumia format ya iEPAS na hujazwa kiotomatiki na **centre number, jina la shule, mwezi na mwaka** wa shule inayopakua.
+### Usajili wa wanafunzi kwa Excel (OASIS)
+Kwenye *Students → Import (Excel)* bofya **Pakua template (.xlsx)**. Template hutumia format ya OASIS na hujazwa kiotomatiki na **centre number, jina la shule, mwezi na mwaka** wa shule inayopakua.
 
 - Safu: `S/N`, `PREMS_NO`, `FIRST_NAME`, `MIDDLE_NAME`, `LAST_NAME`, `SEX`, `CLASS`, `STREAM`, `DOB`, `NATIONALITY`, `GUARDIAN_NAME`, `GUARDIAN_PHONE`. **Hakuna Admission No** — PREMS No ndiyo kitambulisho cha mwanafunzi.
 - **Safu za lazima (zenye rangi):** `PREMS_NO`, `FIRST_NAME`, `LAST_NAME`, `SEX`, `CLASS`, `GUARDIAN_NAME`, `GUARDIAN_PHONE`. Kama moja haijajazwa, **hakuna mwanafunzi atakayesajiliwa**.
@@ -106,7 +106,7 @@ Kwenye *Admin → Exams →* fungua mtihani (*Exam view*), kwenye kadi ya madara
 ## Kupakia alama (score_upload.php)
 Kila ukurasa wa somo una njia tatu:
 1. **Template & Excel:** pakua template ya somo (`.xlsx`), jaza safu ya **Score**, kisha pakia faili hiyo (`.xlsx` pekee).
-   - Template inatumia format rasmi ya **iEPAS** (`storage/templates/iepas_score_template.xlsx`) yenye safu tano: `S/N`, `Name of Student`, `Sex`, `Index Number`, `Score`.
+   - Template inatumia format rasmi ya **OASIS** (`storage/templates/iepas_score_template.xlsx`) yenye safu tano: `S/N`, `Name of Student`, `Sex`, `Index Number`, `Score`.
    - Kabla ya kupakuliwa, mfumo hujaza kiotomatiki sehemu zote zenye maneno **`JINA LA SHULE`**, **`JINA LA MTIHANI`**, **`JINA LA SOMO`** na **`KIDATO CHA MTIHANI`** kwa jina la shule, mtihani, somo na kidato husika. Safu za S/N, jina, jinsia na Index Number hujazwa kwa watahiniwa wote wa darasa; mwalimu huingiza alama kwenye safu ya **Score** pekee.
    - **Index Number** huchukuliwa kutoka `exam_candidates.cand_no`; kama haipo, mfumo hutumia `students.admission_no`. Wakati wa upload, safu ya `Index Number`, `Admission No` au `Candidate No` inakubalika.
    - Jedwali huishia kwenye **mwanafunzi wa mwisho** wa darasa; safu zote tupu za chini zinaondolewa, hivyo hakuna mistari au kurasa tupu (mfano: wanafunzi 20 → mistari 7–26; wanafunzi 5 → mistari 7–11).

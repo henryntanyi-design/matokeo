@@ -67,7 +67,7 @@ layout_start('Dashboard', 'dashboard'); ?>
 </style>
 
 <div class="mb-3">
-  <h1 class="sd-welcome">Welcome to iEPAS</h1>
+  <h1 class="sd-welcome">Welcome to OASIS</h1>
 </div>
 
 <div class="row g-3 mb-3">

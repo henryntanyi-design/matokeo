@@ -1,6 +1,6 @@
 <?php
 /**
- * Nyaraka za mtihani kwa muundo wa iEPAS:
+ * Nyaraka za mtihani kwa muundo wa OASIS:
  * CAL (Collective Attendance List), ISAL (Individual Subject Attendance List),
  * Registered Candidates Statistics na Sitting Plan.
  */

@@ -18,7 +18,7 @@ if (!defined('DB_NAME')) define('DB_NAME', 'matokeo_db');
 if (!defined('DB_USER')) define('DB_USER', 'root');
 if (!defined('DB_PASS')) define('DB_PASS', '');
 
-if (!defined('APP_NAME')) define('APP_NAME', 'Mfumo wa Matokeo');
+if (!defined('APP_NAME')) define('APP_NAME', 'Operations & Academic School Information (OASIS)');
 if (!defined('TIMEZONE')) define('TIMEZONE', 'Africa/Dar_es_Salaam');
 // define('BASE_URL', '/matokeo');  // Washa tu kama viungo havifanyi kazi (kwa kawaida hugunduliwa kiotomatiki)
 

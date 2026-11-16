@@ -143,7 +143,7 @@ body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
           <li><i class="bi bi-calendar-check"></i> Sets the current academic year</li>
         </ul>
       </div>
-      <div class="z inst-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?> &middot; iEPAS</div>
+      <div class="z inst-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?></div>
     </aside>
 
     <main class="inst-form">
@@ -182,7 +182,7 @@ body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
         <div class="mb-2">
           <label class="form-label" for="system_name">System name *</label>
           <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-building"></i></span>
-            <input name="system_name" id="system_name" class="form-control" required value="<?php echo h($_POST['system_name'] ?? 'Integrated Educational Performance Analysis System (iEPAS) '); ?>"></div>
+            <input name="system_name" id="system_name" class="form-control" required value="<?php echo h($_POST['system_name'] ?? 'Operations & Academic School Information (OASIS)'); ?>"></div>
         </div>
         <div class="mb-3">
           <label class="form-label" for="year">Academic year *</label>
@@ -214,7 +214,7 @@ body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 
         <button class="inst-btn w-100"><i class="bi bi-magic"></i> Install system</button>
       </form>
-      <div class="inst-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?> &middot; iEPAS</div>
+      <div class="inst-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?></div>
 <?php endif; ?>
     </main>
   </div>

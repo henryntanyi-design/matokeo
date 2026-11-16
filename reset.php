@@ -134,7 +134,7 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
           <li><i>3</i> Sign in with your new password</li>
         </ul>
       </div>
-      <div class="z lg-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?> &middot; iEPAS</div>
+      <div class="z lg-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?></div>
     </aside>
 
     <main class="lg-form">
@@ -182,7 +182,7 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
       <div class="lg-hint"><i class="bi bi-info-circle"></i><span>Kiungo hiki kinatumika <b>mara moja</b> pekee. Ukikihitaji tena, omba kipya kwenye ukurasa wa kusahau nenosiri.</span></div>
       <div class="lg-links"><a href="login.php" class="text-primary"><i class="bi bi-arrow-left-short"></i>Back to sign in</a></div>
 <?php endif; ?>
-      <div class="lg-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?> &middot; iEPAS</div>
+      <div class="lg-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?></div>
     </main>
   </div>
 </div>

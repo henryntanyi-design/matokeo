@@ -118,7 +118,7 @@ body{background:#f3f5fb}
   .user-chip{max-width:52vw}}
 @media print{.side,.topbar,.no-print{display:none!important}.main{margin-left:0!important}}
 </style></head><body>
-<div class="side"><div class="brand"><img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo"><div class="brand-text"><?php echo h(system_name()); ?></div></div>
+<div class="side"><div class="brand"><img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo"><div class="brand-text"><?php echo h(system_name()); ?></div></div>
   <ul class="nav flex-column mt-2">
   <?php foreach ($items as $it): ?><li><a class="nav-link <?php echo $active === $it[0] ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <?php echo h($it[1]); ?></a></li><?php endforeach; ?>
     <li><a class="nav-link" href="<?php echo h(url('logout.php')); ?>"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
@@ -127,7 +127,7 @@ body{background:#f3f5fb}
   <div class="topbar">
     <div class="topbar-brand">
       <button class="topbar-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="Fungua menyu"><i class="bi bi-list"></i></button>
-      <img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo" class="topbar-logo">
+      <img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo" class="topbar-logo">
       <div class="topbar-text">
         <div class="topbar-title"><?php echo h(system_name()); ?></div>
         <div class="topbar-sub"><i class="bi bi-geo-alt-fill me-1"></i><?php echo h($sc['district'] ?? ''); ?><?php echo !empty($sc['region']) ? ', ' . h($sc['region']) : ''; ?><?php if (!empty($sc['centre_no'])): ?><span class="mx-2">|</span><?php echo h($sc['centre_no']); ?><span class="mx-2">-</span><?php echo h($sc ? $sc['name'] . ' SECONDARY SCHOOL' : ($u && $u['role'] === 'super' ? 'Ngazi ya Wilaya' : $title)); ?>
@@ -148,7 +148,7 @@ body{background:#f3f5fb}
   <?php if ($u && $u['role'] === 'super' && $sc): ?><div class="bg-warning-subtle border-bottom px-4 py-1 small no-print fw-bold">Manage School: <b><?php echo h($sc['name']); ?></b> &middot; <a href="<?php echo h(url('super/dashboard.php?exit=1')); ?>">Back to DSEO Dashboard</a></div><?php endif; ?>
   <div class="offcanvas offcanvas-start main-nav no-print" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
     <div class="offcanvas-header">
-      <img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo" class="topbar-logo">
+      <img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo" class="topbar-logo">
       <div class="offcanvas-title" id="mobileNavLabel"><?php echo h(system_name()); ?></div>
       <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Funga"></button>
     </div>
