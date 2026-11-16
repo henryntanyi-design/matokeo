@@ -112,7 +112,8 @@ body{background:#f3f5fb}
 .side .nav{overflow-y:auto;max-height:calc(100vh - 96px)}
 @media(max-width:767px){.side{display:none}.main{margin-left:0}
   .topbar-menu{display:inline-flex}
-  .topbar{padding:8px 14px;flex-wrap:nowrap;gap:10px}
+  /* Topbar ishikamane juu ya skrini wakati wa scroll kwenye simu (Android/iOS). */
+  .topbar{padding:8px 14px;flex-wrap:nowrap;gap:10px;position:sticky;top:0;z-index:1030}
   .topbar-brand{gap:9px}
   .topbar-logo{width:38px;height:38px;border-radius:10px;padding:0}
   .topbar-title{font-size:1.06rem;white-space:nowrap}
