@@ -1,70 +1,29 @@
-name: Deploy kwa FTP
+name: Deploy to Namecheap
 
-# Kila push kwenye main inapeleka mabadiliko kwenye server ya live.
-# Unaweza pia kuendesha kwa mkono: Actions -> "Deploy kwa FTP" -> Run workflow.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# Deploy mbili zisikimbizane kwa wakati mmoja.
-concurrency:
-  group: deploy-ftp
-  cancel-in-progress: false
-
 jobs:
   deploy:
+    name: FTP Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Chukua code kutoka GitHub
+      - name: Pata code
         uses: actions/checkout@v4
 
-      # Bila secrets, workflow inaruka deploy na kuonyesha onyo (haishindwi).
-      - name: 2. Kagua secrets za FTP
-        id: check
-        run: |
-          if [ -z "${{ secrets.FTP_SERVER }}" ] || [ -z "${{ secrets.FTP_USERNAME }}" ] || [ -z "${{ secrets.FTP_PASSWORD }}" ]; then
-            echo "::warning::Secrets za FTP hazijawekwa. Weka FTP_SERVER, FTP_USERNAME, FTP_PASSWORD na FTP_SERVER_DIR kwenye Settings -> Secrets and variables -> Actions."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 3. Weka PHP na Composer
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          tools: composer:v2
-          coverage: none
-
-      # vendor/ haipo Git (imezuiwa), hivyo inajengwa hapa kisha inapakiwa.
-      # composer.lock inaamua versions, hivyo ni zile zile za kompyuta yako.
-      - name: 4. composer install --no-dev
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
-
-      - name: 5. Pakia kwenye server kwa FTP
-        if: steps.check.outputs.ready == 'true'
+      - name: Peleka faili kwa FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          # Mf. public_html/ au public_html/matokeo/ (mwisho ni lazima uwe na "/")
-          server-dir: ${{ secrets.FTP_SERVER_DIR || './' }}
-          port: 21
-          # protocol: ftps        # washa kama hosting inaunga mkono FTPS (salama zaidi)
-          timeout: 120000
-          log-level: standard
-          # TUNATUMA default (false): faili zilizopo kwenye server hazifutwi.
-          # Usiiweke true — itafuta config.local.php na uploads za live.
-          dangerous-clean-slate: false
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          server-dir: ./
           exclude: |
             **/.git*
             **/.git*/**
-            **/.github/**
-            **/.gitignore
-            **/.ftp-deploy-sync-state.json
-            **/README.md
-            **/composer.json
-            **/composer.lock
-            **/database/**
+            .github/**
+            README.md
+            config.example.php
+            .cpanel.yml
