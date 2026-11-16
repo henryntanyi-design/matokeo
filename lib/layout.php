@@ -59,6 +59,19 @@ body{background:#f3f5fb}
 .topbar-title{font-weight:700;color:#0b3d91;font-size:1.02rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar-sub{font-size:.76rem;color:#6c757d;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 .topbar-page{font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:#6c757d;font-weight:600}
+.topbar-menu{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;padding:0;border:1px solid #dbe4f4;border-radius:11px;background:#f5f8ff;color:#0b3d91;font-size:1.25rem;line-height:1;transition:background .15s ease,border-color .15s ease}
+.topbar-menu:hover{background:#e9f0ff;border-color:#b9d0f0}
+.topbar-menu:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(44,110,213,.16)}
+.offcanvas.main-nav{width:min(272px,84vw);border:0;background:linear-gradient(180deg,#0b3d91 0%,#07285f 100%);color:#fff}
+.main-nav .offcanvas-header{padding:14px 16px;gap:10px;background:rgba(0,0,0,.16);border-bottom:1px solid rgba(255,255,255,.12)}
+.main-nav .offcanvas-title{color:#fff;font-weight:700;font-size:.8rem;line-height:1.3;white-space:normal}
+.main-nav .topbar-logo{width:40px;height:40px;padding:0;background:transparent;box-shadow:none}
+.main-nav .nav-link{color:rgba(255,255,255,.85);padding:11px 18px;display:flex;gap:10px;align-items:center;border-left:3px solid transparent;font-size:.92rem}
+.main-nav .nav-link:hover,.main-nav .nav-link:focus{background:rgba(255,255,255,.1);color:#fff}
+.main-nav .nav-link.active{background:rgba(255,255,255,.16);color:#fff;border-left-color:#ffc107;font-weight:600}
+.main-nav .nav-logout{color:#ffc9c9;margin-top:4px;border-top:1px solid rgba(255,255,255,.12)}
+.main-nav .nav-logout:hover{background:rgba(255,80,80,.18);color:#fff}
+.main-nav .btn-close{filter:invert(1) grayscale(1) brightness(2)}
 .user-chip{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(180deg,#ffffff,#f7faff);border:1px solid #e2e8f6;border-radius:999px;padding:4px 14px 4px 4px;text-decoration:none;color:#16203a;max-width:300px;
   transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
 .user-chip:hover{border-color:#b9d0f0;box-shadow:0 8px 20px -10px rgba(11,61,145,.5);transform:translateY(-1px);color:#0b3d91}
@@ -94,6 +107,7 @@ body{background:#f3f5fb}
 @keyframes flashOut{to{opacity:0;transform:translateY(-8px)}}
 .side .nav{overflow-y:auto;max-height:calc(100vh - 96px)}
 @media(max-width:767px){.side{display:none}.main{margin-left:0}
+  .topbar-menu{display:inline-flex}
   .topbar{padding:8px 14px;flex-wrap:nowrap;gap:10px}
   .topbar-brand{gap:9px}
   .topbar-logo{width:38px;height:38px;border-radius:10px;padding:3px}
@@ -112,6 +126,7 @@ body{background:#f3f5fb}
 <div class="main">
   <div class="topbar">
     <div class="topbar-brand">
+      <button class="topbar-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="Fungua menyu"><i class="bi bi-list"></i></button>
       <img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo" class="topbar-logo">
       <div class="topbar-text">
         <div class="topbar-title"><?php echo h(system_name()); ?></div>
@@ -131,9 +146,19 @@ body{background:#f3f5fb}
     </div>
   </div>
   <?php if ($u && $u['role'] === 'super' && $sc): ?><div class="bg-warning-subtle border-bottom px-4 py-1 small no-print fw-bold">Manage School: <b><?php echo h($sc['name']); ?></b> &middot; <a href="<?php echo h(url('super/dashboard.php?exit=1')); ?>">Back to DSEO Dashboard</a></div><?php endif; ?>
-  <div class="d-md-none bg-white border-bottom px-2 py-1 overflow-auto text-nowrap no-print">
-    <?php foreach ($items as $it): ?><a class="btn btn-sm <?php echo $active === $it[0] ? 'btn-primary' : 'btn-outline-secondary'; ?> me-1" href="<?php echo h(url($it[2])); ?>"><?php echo h($it[1]); ?></a><?php endforeach; ?>
-    <a class="btn btn-sm btn-outline-danger" href="<?php echo h(url('logout.php')); ?>">Logout</a></div>
+  <div class="offcanvas offcanvas-start main-nav no-print" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+    <div class="offcanvas-header">
+      <img src="<?php echo h(url('assets/img/iepas-logo.png')); ?>" alt="iEPAS Logo" class="topbar-logo">
+      <div class="offcanvas-title" id="mobileNavLabel"><?php echo h(system_name()); ?></div>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Funga"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <ul class="nav flex-column">
+      <?php foreach ($items as $it): ?><li><a class="nav-link <?php echo $active === $it[0] ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <?php echo h($it[1]); ?></a></li><?php endforeach; ?>
+        <li><a class="nav-link nav-logout" href="<?php echo h(url('logout.php')); ?>"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
+      </ul>
+    </div>
+  </div>
   <div class="container-fluid p-4">
 <?php flash_toasts(); }
 function layout_end() { ?>
