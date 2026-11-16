@@ -1,0 +1,18 @@
+# Composer packages - regenerated with "composer install"
+/vendor/
+
+# Runtime logs (may contain password-reset links)
+/storage/*.log
+/storage/mail.log
+/storage/tmp/*
+
+# Local secrets / override config
+config.local.php
+*.local.php
+
+# Archives and OS junk
+*.zip
+*.7z
+.DS_Store
+Thumbs.db
+desktop.ini
