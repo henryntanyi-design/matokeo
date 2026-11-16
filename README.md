@@ -21,6 +21,33 @@ PHP 7.4+ / MySQL-MariaDB. Folda: `matokeo`; database: `matokeo_db` (haiingiliani
 5. (Hiari, kujaribu) import `database/sample_data.sql` baada ya hatua ya 3 (shule 2 za mfano, wanafunzi, mtihani wa wilaya).
 6. **Siri za mazingira:** nakili `config.example.php` kuwa `config.local.php` (`cp config.example.php config.local.php`) kisha weka `DB_*`, `APP_URL` na SMTP hapo. `config.local.php` haipakiwi kwenye Git (`.gitignore`), hivyo nenosiri halisi halionekani GitHub; `config.php` ina chaguo-msingi za development tu.
 
+## Kuweka mtandaoni (deploy kwa FTP)
+Kila `git push` kwenye branch `main` inapeleka mabadiliko kwenye shared hosting kiotomatiki kupitia GitHub Actions (`.github/workflows/deploy.yml`). Workflow hujenga `vendor/` (kwa kuwa haipo Git) kisha hupakia kwa FTP faili zilizobadilika pekee.
+
+**Mara moja: GitHub → Settings → Secrets and variables → Actions** — ongeza secrets hizi nne:
+
+| Secret | Thamani | Mfano |
+|---|---|---|
+| `FTP_SERVER` | hostname ya FTP (bila `ftp://`) | `ftp.shule.ac.tz` |
+| `FTP_USERNAME` | mtumiaji wa FTP (tengeneza akaunti maalum kwenye cPanel → FTP Accounts, ipe folda ya site pekee) | `deploy@shule.ac.tz` |
+| `FTP_PASSWORD` | nenosiri la akaunti hiyo | — |
+| `FTP_SERVER_DIR` | folda ya site kwenye server, **mwisho uwe na `/`** | `public_html/matokeo/` |
+
+Kisha *Actions → "Deploy kwa FTP" → Run workflow* kuendesha mara ya kwanza kwa mkono.
+
+**Mara moja: kwenye server**
+1. phpMyAdmin → Import `database/schema.sql`, kisha migrations unazohitaji (tazama sehemu za chini).
+2. Tengeneza `config.local.php` **kwenye server** (cPanel File Manager au FTP) ukiwa na `DB_*` za server, `APP_URL` na SMTP. Faili hili halipo Git, hivyo deploy haiwezi kulipakia wala kulifuta.
+3. Hakikisha `storage/` ina ruhusa ya kuandika (folda `755`, faili `644`).
+4. Fungua site → `install.php` kutengeneza super admin, kisha **futa `install.php`** (hujifunga baada ya kutumika, lakini ni salama kuiondoa).
+5. Hakuna Composer ya server inayohitajika — `vendor/` hujengwa kwenye GitHub Actions na kupakiwa.
+
+**Mambo ya kuzingatia**
+- `database/` haipakiwi kwenye server (SQL zisiweze kupakuliwa kwa mtandao). Mabadiliko ya schema hufanywa kwa mkono.
+- Usiweke `dangerous-clean-slate: true` kwenye workflow — itafuta `config.local.php` na faili za uploads zilizo kwenye server.
+- FTP ni ya maandishi wazi; ikiwa hosting inaunga mkono, washa `protocol: ftps` kwenye workflow na tumia HTTPS kila mahali.
+- Deploy ya kwanza ni ndefu (inapakia `vendor/`); baadaye ni faili zilizobadilika tu, kwa kawaida dakika 1–2. Ufuatilie kwenye *Actions*.
+
 ## Mpangilio wa kazi
 **Wilaya (super):** Schools → ongeza shule (+ akaunti ya admin wa shule) → Classes/Subjects/Grading (kama inahitajika) → District Exams → chagua madarasa na shule → baada ya shule kuingiza alama: *Matokeo ya wilaya* (council) → chapisha.
 **Shule (admin):** Teachers (orodha ya walimu → *Register teacher*) → Assignments (stream maalum) → Students (import) → Exams → mtihani (chagua **kidato kwa check box**, kisha **masomo ya mtihani** kwa kila kidato) → *Sajili watahiniwa* → walimu waingize alama → Matokeo → *Chapisha kwa wanafunzi* → toa PIN (Students → PIN).
@@ -95,7 +122,7 @@ Kila ukurasa wa somo una njia tatu:
 | Mwanafunzi (hana email) | Admin wa shule: *Students → Reset PIN* (PIN ya muda ya tarakimu 6 inaonyeshwa mara moja). |
 Nenosiri/PIN za muda **hulazimisha kubadilishwa** mtumiaji akiingia mara ya kwanza. Kiungo cha email hakifichui kama akaunti ipo (jibu ni lilelile).
 
-**Barua pepe (XAMPP):** `mail()` ya XAMPP kwa kawaida haitumi barua halisi. Chaguo: (a) weka SMTP kwenye `config.php` (mfano Gmail + App Password, inahitaji `composer install`), au (b) kujaribu tu: kiungo cha kureset kinaandikwa kwenye `storage/mail.log` (folda imezuiwa kufikiwa kwa mtandao). Weka pia `APP_URL` kwenye `config.php` ili viungo vya barua visitegemee kichwa cha ombi.
+**Barua pepe (XAMPP):** `mail()` ya XAMPP kwa kawaida haitumi barua halisi. Chaguo: (a) weka SMTP kwenye `config.local.php` (mfano Gmail + App Password, inahitaji `composer install`), au (b) kujaribu tu: kiungo cha kureset kinaandikwa kwenye `storage/mail.log` (folda imezuiwa kufikiwa kwa mtandao). Weka pia `APP_URL` kwenye `config.local.php` ili viungo vya barua visitegemee kichwa cha ombi.
 
 **Kwa mfumo ulioshasakinishwa:** endesha `database/migration_password_reset.sql` mara moja, kisha nakili faili za `password_reset_update.zip`.
 
