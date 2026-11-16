@@ -14,12 +14,12 @@ if (!$exam) { ra_no_exam(); layout_end(); exit; }
 $d = ra_build($exam_id);
 if (($_GET['export'] ?? '') === 'pdf' && $hasData) ra_export_pdf($exam, $d, 'districts');
 extract($d);
-ra_page_head('Districts Ranking', 'map', $exam, $exam_id, $hasData, $exams);
+ra_page_head('Districts Ranking', 'trophy', $exam, $exam_id, $hasData, $exams);
 ra_nav($exam_id, 'districts');
 ?>
 
 <div class="card ra-sec" id="districts">
-  <div class="ra-sec-h"><span class="t"><i class="bi bi-map"></i>Districts Ranking</span><span class="ra-pill"><i class="bi bi-hash"></i><?php echo count($districtRows); ?></span></div>
+  <div class="ra-sec-h"><span class="t"><i class="bi bi-trophy"></i>Districts Ranking</span><span class="ra-pill"><i class="bi bi-hash"></i><?php echo count($districtRows); ?></span></div>
   <div class="table-responsive"><table class="table table-hover align-middle mb-0 ra-table">
     <thead><tr><th class="ps-3">#</th><th>District</th><th>Schools</th><th>Candidates</th><th>GPA</th><th>Avg score</th><th class="pe-3">Pass %</th></tr></thead>
     <tbody>

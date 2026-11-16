@@ -30,7 +30,7 @@ function ra_sections() {
             'desc' => 'Shule zote zilizochapisha, GPA, wastani na asilimia ya ufaulu.'],
         'wards' => ['title' => 'Wards Ranking', 'file' => 'results_wards.php', 'icon' => 'geo-fill',
             'desc' => 'Ulinganisho wa kata (wards) kwa GPA na ufaulu.'],
-        'districts' => ['title' => 'Districts Ranking', 'file' => 'results_districts.php', 'icon' => 'map',
+        'districts' => ['title' => 'Districts Ranking', 'file' => 'results_districts.php', 'icon' => 'trophy',
             'desc' => 'Ulinganisho wa wilaya zilizoshiriki mtihani.'],
         'regions' => ['title' => 'Regions Ranking', 'file' => 'results_regions.php', 'icon' => 'globe-africa',
             'desc' => 'Ulinganisho wa mikoa kwa matokeo ya pamoja.'],

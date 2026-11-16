@@ -140,7 +140,7 @@ Kwa mtihani na darasa: kila shule inayoshiriki, idadi ya watahiniwa, mgawanyo wa
 | --- | --- |
 | `results_schools.php` | Schools Ranking |
 | `results_wards.php` | Wards Ranking |
-| `results_districts.php` | Districts Ranking |
+| `results_districts.php` | Districts Ranking (wilaya) |
 | `results_regions.php` | Regions Ranking |
 | `results_subjects.php` | Subjects Ranking |
 | `results_subject_analysis.php` | Overall Subjects Analysis |
