@@ -19,6 +19,7 @@ PHP 7.4+ / MySQL-MariaDB. Folda: `matokeo`; database: `matokeo_db` (haiingiliani
 3. Fungua `http://localhost/matokeo/` → `install.php`: tengeneza **super admin** (jina la mfumo, mwaka, akaunti).
 4. `composer install` inahitajika kwa score upload ya Excel (`.xlsx`) na export za PDF/Excel. Bila Composer: score upload haitafanya kazi; PDF → ukurasa wa Print ("Save as PDF").
 5. (Hiari, kujaribu) import `database/sample_data.sql` baada ya hatua ya 3 (shule 2 za mfano, wanafunzi, mtihani wa wilaya).
+6. **Siri za mazingira:** nakili `config.example.php` kuwa `config.local.php` (`cp config.example.php config.local.php`) kisha weka `DB_*`, `APP_URL` na SMTP hapo. `config.local.php` haipakiwi kwenye Git (`.gitignore`), hivyo nenosiri halisi halionekani GitHub; `config.php` ina chaguo-msingi za development tu.
 
 ## Mpangilio wa kazi
 **Wilaya (super):** Schools → ongeza shule (+ akaunti ya admin wa shule) → Classes/Subjects/Grading (kama inahitajika) → District Exams → chagua madarasa na shule → baada ya shule kuingiza alama: *Matokeo ya wilaya* (council) → chapisha.
@@ -159,7 +160,7 @@ database/ schema.sql, sample_data.sql, migration_password_reset.sql, migration_t
 ```
 
 ## Usalama na mipaka ya data
-Kila query ya wanafunzi, walimu, watahiniwa na alama inachujwa kwa shule ya mtumiaji; admin/teacher hawawezi kuona shule nyingine; mwanafunzi huona ripoti yake tu na ikiwa imechapishwa. Hash ya nenosiri/PIN, CSRF, kufunga akaunti baada ya majaribio 5, `install.php` hujifunga. Tumia HTTPS na badilisha `DB_PASS` kabla ya kuweka mtandaoni.
+Kila query ya wanafunzi, walimu, watahiniwa na alama inachujwa kwa shule ya mtumiaji; admin/teacher hawawezi kuona shule nyingine; mwanafunzi huona ripoti yake tu na ikiwa imechapishwa. Hash ya nenosiri/PIN, CSRF, kufunga akaunti baada ya majaribio 5, `install.php` hujifunga. Tumia HTTPS na weka `DB_PASS` halisi kwenye `config.local.php` (sio `config.php`) kabla ya kuweka mtandaoni.
 
 ## Mapungufu
 - Madarasa, masomo na gredi ni vya pamoja kwa shule zote (hudhibitiwa na super); shule haziwezi kuwa na gredi tofauti.

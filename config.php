@@ -1,20 +1,28 @@
 <?php
-// ===== Mipangilio ya database =====
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'matokeo_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');            // XAMPP: nenosiri tupu kwa chaguo-msingi
+/**
+ * Mipangilio ya jumla ya mfumo.
+ *
+ * SIRI ZA MAZINGIRA (database, SMTP, APP_URL) ziwe kwenye config.local.php,
+ * ambayo haipakiwi kwenye Git. Nakili config.example.php kuwa config.local.php
+ * na ujaze thamani halisi. Bila faili hilo, chaguo-msingi za development
+ * (hapa chini) hutumika.
+ */
+$localConfig = __DIR__ . '/config.local.php';
+if (is_file($localConfig)) {
+    require $localConfig;
+}
 
-define('APP_NAME', 'Mfumo wa Matokeo');
-define('TIMEZONE', 'Africa/Dar_es_Salaam');
+// ===== Mipangilio ya database (chaguo-msingi cha development) =====
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if (!defined('DB_NAME')) define('DB_NAME', 'matokeo_db');
+if (!defined('DB_USER')) define('DB_USER', 'root');
+if (!defined('DB_PASS')) define('DB_PASS', '');
+
+if (!defined('APP_NAME')) define('APP_NAME', 'Mfumo wa Matokeo');
+if (!defined('TIMEZONE')) define('TIMEZONE', 'Africa/Dar_es_Salaam');
 // define('BASE_URL', '/matokeo');  // Washa tu kama viungo havifanyi kazi (kwa kawaida hugunduliwa kiotomatiki)
 
 // ===== Barua pepe (kwa "Umesahau nenosiri") - YOTE HIARI =====
-// Anwani ya mfumo kwa viungo vya barua (INAPENDEKEZWA kuiweka, ili isitegemee kichwa cha ombi):
-// define('APP_URL', 'http://localhost/matokeo');
-// define('MAIL_FROM', 'no-reply@shule.go.tz');
-// define('MAIL_FROM_NAME', 'Mfumo wa Matokeo');
-// SMTP (inahitaji "composer install" kwa PHPMailer). Mfano wa Gmail: host smtp.gmail.com, port 587, secure tls, na "App Password":
-// define('SMTP_HOST', 'smtp.gmail.com'); define('SMTP_PORT', 587); define('SMTP_SECURE', 'tls');
-// define('SMTP_USER', 'jina@gmail.com'); define('SMTP_PASS', 'app-password');
-// define('MAIL_LOG', false);   // true = hifadhi nakala ya kila barua kwenye storage/mail.log (kwa kujaribu)
+// Weka hizi kwenye config.local.php, sio hapa:
+// APP_URL, MAIL_FROM, MAIL_FROM_NAME, SMTP_HOST, SMTP_PORT, SMTP_SECURE,
+// SMTP_USER, SMTP_PASS, MAIL_LOG
