@@ -59,6 +59,7 @@ layout_start('Classes', 'classes'); ?>
 .cls-table tr.cls-editing:hover{background:#fff9e8}
 .cls-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:1rem;color:#fff;flex:0 0 auto;background:linear-gradient(135deg,#0b8a3e,#20b15b);box-shadow:0 3px 8px rgba(11,138,62,.22)}
 .cls-mark.a{background:linear-gradient(135deg,#5b3fb5,#8a6fe0);box-shadow:0 3px 8px rgba(91,63,181,.22)}
+@media (max-width:767.98px){.cls-table .cls-mark{display:none!important}}
 .cls-name{font-weight:700;color:#16203a;line-height:1.25}
 .cls-meta{font-size:.71rem;color:#8a99b0;display:flex;align-items:center;gap:4px;margin-top:2px}
 .cls-pill{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
@@ -139,7 +140,7 @@ layout_start('Classes', 'classes'); ?>
         <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle"><?php echo $nTotal; ?> class<?php echo $nTotal === 1 ? '' : 'es'; ?></span>
       </div>
       <div class="table-responsive"><table class="table table-hover align-middle mb-0 cls-table">
-        <thead><tr><th class="ps-3">Class</th><th>Level</th><th><i class="bi bi-people me-1"></i>Students</th><th><i class="bi bi-book me-1"></i>Subjects</th><th class="text-end pe-3">Actions</th></tr></thead>
+        <thead><tr><th class="ps-3">Class</th><th class="d-none d-md-table-cell">Level</th><th><i class="bi bi-people me-1"></i>Students</th><th class="d-none d-md-table-cell"><i class="bi bi-book me-1"></i>Subjects</th><th class="text-end pe-3">Actions</th></tr></thead>
         <tbody>
         <?php foreach ($rows as $c): ?>
           <tr<?php echo $edit && (int)$edit['id'] === (int)$c['id'] ? ' class="cls-editing"' : ''; ?>>
@@ -152,9 +153,9 @@ layout_start('Classes', 'classes'); ?>
                 </div>
               </div>
             </td>
-            <td><span class="cls-pill <?php echo $c['level'] === 'A' ? 'a' : 'o'; ?>"><?php echo $c['level'] === 'A' ? 'A-Level (ACSEE)' : 'O-Level (CSEE)'; ?></span></td>
+            <td class="d-none d-md-table-cell"><span class="cls-pill <?php echo $c['level'] === 'A' ? 'a' : 'o'; ?>"><?php echo $c['level'] === 'A' ? 'A-Level (ACSEE)' : 'O-Level (CSEE)'; ?></span></td>
             <td><span class="cls-count"><i class="bi bi-people"></i><?php echo (int)$c['n_students']; ?></span></td>
-            <td><span class="cls-count"><i class="bi bi-book"></i><?php echo (int)$c['n_sub']; ?></span></td>
+            <td class="d-none d-md-table-cell"><span class="cls-count"><i class="bi bi-book"></i><?php echo (int)$c['n_sub']; ?></span></td>
             <td class="text-end pe-3 text-nowrap">
               <div class="cls-actions justify-content-end">
                 <a class="btn btn-outline-primary" href="<?php echo h(url('super/class_subjects.php?class_id=' . (int)$c['id'])); ?>" title="Manage subjects for this class"><i class="bi bi-book"></i><span class="d-none d-xl-inline ms-1">Subjects</span></a>
