@@ -196,7 +196,10 @@ teaching_nav('timetable');
   </div>
   <div class="d-flex flex-wrap gap-2">
     <?php if ($isAdmin): ?>
-      <a class="btn btn-sm btn-primary fw-bold" href="<?php echo h(url('teaching/timetable_new.php?year_id=' . (int)$year['id'] . '&group=' . urlencode($group === 'all' ? 'ordinary' : $group))); ?>">
+      <a class="btn btn-sm btn-primary fw-bold" href="<?php echo h(url('teaching/timetable_auto.php?year_id=' . (int)$year['id'])); ?>">
+        <i class="bi bi-magic"></i> Auto Generator
+      </a>
+      <a class="btn btn-sm btn-outline-primary" href="<?php echo h(url('teaching/timetable_new.php?year_id=' . (int)$year['id'] . '&group=' . urlencode($group === 'all' ? 'ordinary' : $group))); ?>">
         <i class="bi bi-calendar-plus"></i> Generate New
       </a>
     <?php endif; ?>

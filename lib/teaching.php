@@ -285,6 +285,7 @@ function teaching_nav($active) {
     $items = [
         'index'    => ['Home', 'house-door', 'teaching/index.php'],
         'timetable'=> ['Timetable', 'calendar3-week', 'teaching/timetable.php'],
+        'timetable_auto' => ['Auto Generator', 'magic', 'teaching/timetable_auto.php'],
         'scheme'   => ['Scheme of Work', 'journal-text', 'teaching/scheme.php'],
         'logbook'  => ['Logbook', 'journal-check', 'teaching/logbook.php'],
         'syllabus' => ['Syllabus', 'book-half', 'teaching/syllabus.php'],

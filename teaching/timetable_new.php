@@ -19,8 +19,8 @@ $streamList = $fStreams ?: [''];
 $streamSuggestions = teaching_stream_options($school_id);
 
 $defaultBreaks = [
-    ['name' => 'Breakfast', 'start' => '10:00', 'end' => '10:30'],
-    ['name' => 'Lunch', 'start' => '12:30', 'end' => '13:10'],
+    ['name' => 'Tea Break', 'start' => '10:00', 'end' => '10:30'],
+    ['name' => 'Lunch Break', 'start' => '12:30', 'end' => '13:10'],
 ];
 $defaultEvents = [
     ['name' => 'Religion', 'day' => 'FRI', 'start' => '13:50', 'end' => '14:30'],
@@ -68,7 +68,7 @@ $fSun = $isPost ? !empty($_POST['include_sunday']) : false;
 $rawBreaks = $isPost ? (is_array($_POST['breaks'] ?? null) ? $_POST['breaks'] : []) : $defaultBreaks;
 $rawEvents = $isPost ? (is_array($_POST['events'] ?? null) ? $_POST['events'] : []) : $defaultEvents;
 if (!$rawBreaks) $rawBreaks = [['name' => '', 'start' => '', 'end' => '']];
-if (!$rawEvents) $rawEvents = [];
+if (!$rawEvents) $rawEvents = [['name' => '', 'day' => '', 'start' => '', 'end' => '']];
 
 $days = tt_days($fSat, $fSun);
 $cfgBreaks = tt_normalize_breaks($rawBreaks);
@@ -272,19 +272,19 @@ teaching_nav('timetable');
     </div>
     <div class="card-body">
       <div id="breakRows">
-        <?php foreach ($rawBreaks as $b): ?>
+        <?php foreach (array_values($rawBreaks) as $bi => $b): ?>
           <div class="row g-2 align-items-end mb-2 tt-break-row">
             <div class="col-12 col-md-4">
               <label class="form-label small fw-bold mb-1">Name</label>
-              <input type="text" name="breaks[][name]" class="form-control form-control-sm" placeholder="Example: Breakfast" value="<?php echo h($b['name'] ?? ''); ?>">
+              <input type="text" name="breaks[<?php echo $bi; ?>][name]" class="form-control form-control-sm" placeholder="Example: Breakfast" value="<?php echo h($b['name'] ?? ''); ?>">
             </div>
             <div class="col-5 col-md-3">
               <label class="form-label small fw-bold mb-1">Start</label>
-              <input type="time" name="breaks[][start]" class="form-control form-control-sm" value="<?php echo h($b['start'] ?? ''); ?>">
+              <input type="time" name="breaks[<?php echo $bi; ?>][start]" class="form-control form-control-sm" value="<?php echo h($b['start'] ?? ''); ?>">
             </div>
             <div class="col-5 col-md-3">
               <label class="form-label small fw-bold mb-1">End</label>
-              <input type="time" name="breaks[][end]" class="form-control form-control-sm" value="<?php echo h($b['end'] ?? ''); ?>">
+              <input type="time" name="breaks[<?php echo $bi; ?>][end]" class="form-control form-control-sm" value="<?php echo h($b['end'] ?? ''); ?>">
             </div>
             <div class="col-2 col-md-2">
               <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="ttRemoveRow(this)" title="Remove break"><i class="bi bi-trash"></i></button>
@@ -303,16 +303,16 @@ teaching_nav('timetable');
     </div>
     <div class="card-body">
       <div id="eventRows">
-        <?php foreach ($rawEvents as $ev):
+        <?php foreach (array_values($rawEvents) as $ei => $ev):
             $evDay = tt_day_code($ev['day'] ?? '') ?: 'MON'; ?>
           <div class="row g-2 align-items-end mb-2 tt-event-row">
             <div class="col-12 col-md-3">
               <label class="form-label small fw-bold mb-1">Event name</label>
-              <input type="text" name="events[][name]" class="form-control form-control-sm" placeholder="Example: Religion" value="<?php echo h($ev['name'] ?? ''); ?>">
+              <input type="text" name="events[<?php echo $ei; ?>][name]" class="form-control form-control-sm" placeholder="Example: Religion" value="<?php echo h($ev['name'] ?? ''); ?>">
             </div>
             <div class="col-6 col-md-2">
               <label class="form-label small fw-bold mb-1">Day</label>
-              <select name="events[][day]" class="form-select form-select-sm">
+              <select name="events[<?php echo $ei; ?>][day]" class="form-select form-select-sm">
                 <?php foreach (tt_day_labels() as $code => $label): ?>
                   <option value="<?php echo h($code); ?>"<?php echo $evDay === $code ? ' selected' : ''; ?>><?php echo h($label); ?></option>
                 <?php endforeach; ?>
@@ -320,11 +320,11 @@ teaching_nav('timetable');
             </div>
             <div class="col-6 col-md-2">
               <label class="form-label small fw-bold mb-1">Start</label>
-              <input type="time" name="events[][start]" class="form-control form-control-sm" value="<?php echo h($ev['start'] ?? ''); ?>">
+              <input type="time" name="events[<?php echo $ei; ?>][start]" class="form-control form-control-sm" value="<?php echo h($ev['start'] ?? ''); ?>">
             </div>
             <div class="col-6 col-md-2">
               <label class="form-label small fw-bold mb-1">End</label>
-              <input type="time" name="events[][end]" class="form-control form-control-sm" value="<?php echo h($ev['end'] ?? ''); ?>">
+              <input type="time" name="events[<?php echo $ei; ?>][end]" class="form-control form-control-sm" value="<?php echo h($ev['end'] ?? ''); ?>">
             </div>
             <div class="col-2 col-md-1">
               <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="ttRemoveRow(this)" title="Remove event"><i class="bi bi-trash"></i></button>
@@ -373,7 +373,7 @@ teaching_nav('timetable');
           </tbody>
         </table>
       </div>
-      <div class="text-muted small mt-2">The total periods for each class must not exceed the available slots. You can set 0 for a subject you do not want on the timetable.</div>
+      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). The total periods for each class must not exceed the available slots. You can set 0 for a subject you do not want on the timetable.</div>
     </div>
   </div>
 
@@ -386,29 +386,33 @@ teaching_nav('timetable');
 </form>
 
 <script>
+var breakSeq = <?php echo count($rawBreaks); ?>;
+var eventSeq = <?php echo count($rawEvents); ?>;
 function ttRemoveRow(btn) {
   var row = btn.closest('.tt-break-row, .tt-event-row');
   if (row) row.remove();
 }
 function ttAddBreak() {
+  var i = breakSeq++;
   var html = '<div class="row g-2 align-items-end mb-2 tt-break-row">'
-    + '<div class="col-12 col-md-4"><label class="form-label small fw-bold mb-1">Name</label><input type="text" name="breaks[][name]" class="form-control form-control-sm" placeholder="Example: Breakfast"></div>'
-    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="breaks[][start]" class="form-control form-control-sm" value="10:00"></div>'
-    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="breaks[][end]" class="form-control form-control-sm" value="10:30"></div>'
+    + '<div class="col-12 col-md-4"><label class="form-label small fw-bold mb-1">Name</label><input type="text" name="breaks[' + i + '][name]" class="form-control form-control-sm" placeholder="Example: Breakfast"></div>'
+    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="breaks[' + i + '][start]" class="form-control form-control-sm" value="10:00"></div>'
+    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="breaks[' + i + '][end]" class="form-control form-control-sm" value="10:30"></div>'
     + '<div class="col-2 col-md-2"><button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="ttRemoveRow(this)"><i class="bi bi-trash"></i></button></div>'
     + '</div>';
   document.getElementById('breakRows').insertAdjacentHTML('beforeend', html);
 }
 function ttAddEvent() {
+  var i = eventSeq++;
   var html = '<div class="row g-2 align-items-end mb-2 tt-event-row">'
-    + '<div class="col-12 col-md-3"><label class="form-label small fw-bold mb-1">Event name</label><input type="text" name="events[][name]" class="form-control form-control-sm" placeholder="Example: Religion"></div>'
-    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Day</label><select name="events[][day]" class="form-select form-select-sm">'
+    + '<div class="col-12 col-md-3"><label class="form-label small fw-bold mb-1">Event name</label><input type="text" name="events[' + i + '][name]" class="form-control form-control-sm" placeholder="Example: Religion"></div>'
+    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Day</label><select name="events[' + i + '][day]" class="form-select form-select-sm">'
     <?php foreach (tt_day_labels() as $code => $label): ?>
     + '<option value="<?php echo h($code); ?>"><?php echo h($label); ?></option>'
     <?php endforeach; ?>
     + '</select></div>'
-    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="events[][start]" class="form-control form-control-sm" value="13:50"></div>'
-    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="events[][end]" class="form-control form-control-sm" value="14:30"></div>'
+    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="events[' + i + '][start]" class="form-control form-control-sm" value="13:50"></div>'
+    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="events[' + i + '][end]" class="form-control form-control-sm" value="14:30"></div>'
     + '<div class="col-2 col-md-1"><button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="ttRemoveRow(this)"><i class="bi bi-trash"></i></button></div>'
     + '</div>';
   document.getElementById('eventRows').insertAdjacentHTML('beforeend', html);

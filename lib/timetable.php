@@ -388,8 +388,140 @@ function tt_subject_weight(array $s) {
 }
 
 /**
- * Gawanya nafasi za wiki kwa masomo ya kila darasa kwa uwiano wa uzito.
- * Jumla ya vipindi kwa kila darasa hulingana na $capacity.
+ * Mtaala rasmi: masomo na idadi ya vipindi kwa wiki.
+ * 'lower' = Kidato cha I–II, 'upper' = Kidato cha III–IV.
+ * Kila somo lina codes (code/abbr ya `subjects`) na names (majina mbadala)
+ * ili defaults zifanane na majina yaliyowekwa shuleni.
+ */
+function tt_curriculum() {
+    static $rows = null;
+    if ($rows !== null) return $rows;
+    $rows = [
+        /* ---- Masomo ya msingi na lazima ---- */
+        'maths'      => ['name' => 'Mathematics', 'lower' => 5, 'upper' => 5, 'codes' => ['BMATH', 'B/MATH', 'MATH'], 'names' => ['mathematics', 'basic mathematics', 'hisabati']],
+        'kiswahili'  => ['name' => 'Kiswahili', 'lower' => 4, 'upper' => 4, 'codes' => ['KISW'], 'names' => ['kiswahili']],
+        'english'    => ['name' => 'English Language', 'lower' => 5, 'upper' => 5, 'codes' => ['ENGL'], 'names' => ['english language', 'english', 'kiingereza']],
+        'business'   => ['name' => 'Business Studies', 'lower' => 3, 'upper' => 3, 'codes' => ['BUS', 'COMM'], 'names' => ['business studies', 'business', 'commerce', 'biashara']],
+        'geography'  => ['name' => 'Geography', 'lower' => 2, 'upper' => 3, 'codes' => ['GEO'], 'names' => ['geography', 'jiografia']],
+        'maadili'    => ['name' => 'Historia ya Tanzania na Maadili', 'lower' => 3, 'upper' => 3, 'codes' => ['CIV'], 'names' => ['historia ya tanzania na maadili', 'historia ya tanzania', 'civics', 'uraia', 'maadili']],
+
+        /* ---- Masomo ya kuchagua ---- */
+        'physics'    => ['name' => 'Physics', 'lower' => 3, 'upper' => 4, 'codes' => ['PHY'], 'names' => ['physics', 'fizikia']],
+        'chemistry'  => ['name' => 'Chemistry', 'lower' => 3, 'upper' => 4, 'codes' => ['CHEM'], 'names' => ['chemistry', 'kemia']],
+        'biology'    => ['name' => 'Biology', 'lower' => 3, 'upper' => 4, 'codes' => ['BIO'], 'names' => ['biology', 'biolojia']],
+        'agriculture' => ['name' => 'Agriculture', 'lower' => 5, 'upper' => 5, 'codes' => ['AGRI', 'AGRIB'], 'names' => ['agriculture', 'kilimo']],
+        'computer'   => ['name' => 'Computer Science', 'lower' => 4, 'upper' => 4, 'codes' => ['COMP', 'CS'], 'names' => ['computer science', 'computer studies', 'kompyuta']],
+        'food'       => ['name' => 'Food and Human Nutrition', 'lower' => 5, 'upper' => 5, 'codes' => ['FOOD'], 'names' => ['food and human nutrition', 'food and nutrition', 'food science', 'lishe']],
+        'sport'      => ['name' => 'Sport Studies', 'lower' => 4, 'upper' => 4, 'codes' => ['SPORT', 'PE'], 'names' => ['sport studies', 'sports studies', 'physical education', 'michezo']],
+        'textile'    => ['name' => 'Textile and Garment Construction', 'lower' => 5, 'upper' => 5, 'codes' => ['TEXT', 'TGCL'], 'names' => ['textile and garment construction', 'textile', 'ushonaji']],
+        'fineart'    => ['name' => 'Fine Art', 'lower' => 4, 'upper' => 4, 'codes' => ['ART', 'FART'], 'names' => ['fine art', 'sanaa']],
+        'theatre'    => ['name' => 'Theatre Arts', 'lower' => 4, 'upper' => 4, 'codes' => ['THEATRE', 'THART'], 'names' => ['theatre arts', 'theater arts', 'theatre', 'sanaa za maonyesho']],
+        'addmaths'   => ['name' => 'Additional Mathematics', 'lower' => 0, 'upper' => 3, 'codes' => ['ADD/MATH', 'ADDMATH'], 'names' => ['additional mathematics', 'additional maths']],
+        'literature' => ['name' => 'Literature in English', 'lower' => 0, 'upper' => 2, 'codes' => ['LIT'], 'names' => ['literature in english', 'literature', 'fasihi ya kiingereza']],
+        'fasihi'     => ['name' => 'Fasihi ya Kiswahili', 'lower' => 0, 'upper' => 2, 'codes' => ['FASIHI'], 'names' => ['fasihi ya kiswahili', 'fasihi']],
+        'french'     => ['name' => 'French', 'lower' => 3, 'upper' => 3, 'codes' => ['FREN', 'FRE'], 'names' => ['french', 'kifaransa']],
+        'arabic'     => ['name' => 'Arabic', 'lower' => 3, 'upper' => 3, 'codes' => ['ARAB'], 'names' => ['arabic', 'khiarabu']],
+        'chinese'    => ['name' => 'Chinese', 'lower' => 3, 'upper' => 3, 'codes' => ['CHIN'], 'names' => ['chinese', 'kichina']],
+        'music'      => ['name' => 'Music', 'lower' => 4, 'upper' => 4, 'codes' => ['MUSIC', 'MUS'], 'names' => ['music', 'muziki']],
+        'history'    => ['name' => 'History', 'lower' => 3, 'upper' => 4, 'codes' => ['HIST'], 'names' => ['history', 'historia']],
+        'bookkeeping' => ['name' => 'Book-keeping', 'lower' => 3, 'upper' => 4, 'codes' => ['BK', 'B/KEEP'], 'names' => ['book-keeping', 'bookkeeping', 'book keeping', 'uhasibu']],
+        'bible'      => ['name' => 'Bible Knowledge', 'lower' => 3, 'upper' => 3, 'codes' => ['BIBLE', 'BKNW'], 'names' => ['bible knowledge', 'biblia']],
+        'islam'      => ['name' => 'Dini ya Kiislamu', 'lower' => 3, 'upper' => 3, 'codes' => ['ISLAM', 'DK'], 'names' => ['dini ya kiislamu', 'islamic knowledge', 'dini']],
+    ];
+    return $rows;
+}
+
+/**
+ * Band ya mtaala kwa darasa: 'lower' (Kidato I–II), 'upper' (Kidato III–IV)
+ * au null (A-Level / darasa lisilojulikana) — hapo tutatumia uzito wa zamani.
+ */
+function tt_class_band(array $class) {
+    if (strtoupper((string)($class['level'] ?? 'O')) === 'A') return null;
+    $name = strtolower(trim((string)($class['name'] ?? '')));
+    if ($name === '') return null;
+    if (preg_match('/\b(iii|iv|3|4)\b/', $name)) return 'upper';
+    if (preg_match('/\b(i|ii|1|2)\b/', $name)) return 'lower';
+    return null;
+}
+
+/**
+ * Vipindi vya wiki kwa somo kulingana na mtaala, au null kama halipo.
+ */
+function tt_curriculum_periods(array $subject, $band) {
+    if ($band !== 'lower' && $band !== 'upper') return null;
+    $code = strtoupper(trim((string)($subject['code'] ?? '')));
+    $abbr = strtoupper(trim((string)($subject['abbr'] ?? '')));
+    $name = strtolower(trim((string)($subject['name'] ?? '')));
+    if ($name === '' && $code === '' && $abbr === '') return null;
+    // A-Level haitumii mtaala wa O-Level.
+    if (strpos($name, 'advanced') !== false || strpos($name, 'general studies') !== false) return null;
+
+    $rows = tt_curriculum();
+    foreach ($rows as $r) {
+        if ($code !== '' && in_array($code, $r['codes'], true)) return (int)$r[$band];
+        if ($abbr !== '' && in_array($abbr, $r['codes'], true)) return (int)$r[$band];
+    }
+    foreach ($rows as $r) {
+        if (in_array($name, $r['names'], true)) return (int)$r[$band];
+    }
+    // Mwisho: jina lililo ndani ya jina (alias ndefu inashinda).
+    $hit = null;
+    $len = 0;
+    foreach ($rows as $r) {
+        foreach ($r['names'] as $alias) {
+            if ($alias === '' || strpos($name, $alias) === false) continue;
+            if (strlen($alias) > $len) { $hit = (int)$r[$band]; $len = strlen($alias); }
+        }
+    }
+    return $hit;
+}
+
+/**
+ * Gawanya $total vipindi kwa uwiano wa $weights (largest remainder method).
+ * Matokeo ni ints zinazolingana kabisa na $total.
+ */
+function tt_largest_remainder(array $weights, $total) {
+    $out = [];
+    $total = max(0, (int)$total);
+    if (!$weights) return $out;
+
+    $sum = 0.0;
+    foreach ($weights as $k => $w) { $weights[$k] = max(0.0, (float)$w); $sum += $weights[$k]; }
+    if ($sum <= 0) {
+        foreach ($weights as $k => $_) $weights[$k] = 1.0;
+        $sum = (float)count($weights);
+    }
+
+    $used = 0;
+    $rems = [];
+    foreach ($weights as $k => $w) {
+        $raw = $total * $w / $sum;
+        $out[$k] = (int)floor($raw);
+        $rems[$k] = $raw - floor($raw);
+        $used += $out[$k];
+    }
+    $left = $total - $used;
+    $keys = array_keys($out);
+    usort($keys, function ($a, $b) use ($rems, $out) {
+        if ($rems[$a] != $rems[$b]) return $rems[$b] <=> $rems[$a];
+        return $out[$a] <=> $out[$b];
+    });
+    $i = 0;
+    while ($left > 0 && $keys) {
+        $out[$keys[$i % count($keys)]]++;
+        $left--;
+        $i++;
+    }
+    return $out;
+}
+
+/**
+ * Mahitaji ya awali ya vipindi kwa wiki.
+ *
+ * Masomo yaliyo kwenye mtaala rasmi (tt_curriculum) hupata idadi yake halisi
+ * kwa Kidato I–II au III–IV. Masomo mengine hugawana nafasi iliyobaki kwa
+ * uwiano wa uzito. Kama jumla inazidi nafasi za wiki, hupunguzwa kwa uwiano
+ * ili jumla isizidi $capacity.
  */
 function tt_default_requirements(array $classes, $capacity) {
     $capacity = max(0, (int)$capacity);
@@ -400,34 +532,36 @@ function tt_default_requirements(array $classes, $capacity) {
                        WHERE cs.class_id = ? ORDER BY s.name', [$cid]);
         if (!$subs) continue;
 
-        $alloc = [];
-        $totalW = 0.0;
+        $band = tt_class_band($c);
+        $targets = [];
+        $fixed = 0;
         foreach ($subs as $s) {
-            $w = tt_subject_weight($s);
-            $alloc[(int)$s['id']] = ['subject' => $s, 'n' => 0, 'rem' => 0.0, 'w' => $w];
-            $totalW += $w;
+            $p = tt_curriculum_periods($s, $band);
+            if ($p === null) continue;
+            $targets[(int)$s['id']] = $p;
+            $fixed += $p;
         }
-        if ($totalW <= 0) $totalW = 1.0;
 
-        $used = 0;
-        foreach ($alloc as $sid => $a) {
-            $raw = $capacity * $a['w'] / $totalW;
-            $alloc[$sid]['n'] = (int)floor($raw);
-            $alloc[$sid]['rem'] = $raw - floor($raw);
-            $used += $alloc[$sid]['n'];
+        // Masomo yasiyo kwenye mtaala: gawio kwa uzito kwenye nafasi iliyobaki.
+        // Somo la ziada halizidi somo la msingi lililo na vipindi vingi zaidi.
+        $loose = [];
+        foreach ($subs as $s) if (!isset($targets[(int)$s['id']])) $loose[] = $s;
+        if ($loose) {
+            $rest = max(0, $capacity - $fixed);
+            if ($rest > 0) {
+                $w = [];
+                foreach ($loose as $s) $w[(int)$s['id']] = tt_subject_weight($s);
+                $top = $fixed > 0 ? max($targets) : $rest;
+                foreach (tt_largest_remainder($w, $rest) as $sid => $n) {
+                    $targets[$sid] = min($n, max(1, (int)$top));
+                }
+            } else {
+                foreach ($loose as $s) $targets[(int)$s['id']] = 0;
+            }
         }
-        $left = $capacity - $used;
-        $order = array_keys($alloc);
-        usort($order, function ($x, $y) use ($alloc) {
-            if ($alloc[$x]['rem'] !== $alloc[$y]['rem']) return $alloc[$y]['rem'] <=> $alloc[$x]['rem'];
-            if ($alloc[$x]['w'] !== $alloc[$y]['w']) return $alloc[$y]['w'] <=> $alloc[$x]['w'];
-            return strcmp($alloc[$x]['subject']['name'], $alloc[$y]['subject']['name']);
-        });
-        $i = 0;
-        while ($left > 0 && $order) {
-            $alloc[$order[$i % count($order)]]['n']++;
-            $left--;
-            $i++;
+
+        if ($capacity > 0 && array_sum($targets) > $capacity) {
+            $targets = tt_largest_remainder($targets, $capacity);
         }
 
         foreach ($subs as $s) {
@@ -438,7 +572,7 @@ function tt_default_requirements(array $classes, $capacity) {
                 'subject_id' => $sid,
                 'subject_name' => (string)$s['name'],
                 'subject_abbr' => (string)($s['abbr'] ?? ''),
-                'periods_per_week' => (int)$alloc[$sid]['n'],
+                'periods_per_week' => (int)($targets[$sid] ?? 0),
             ];
         }
     }
