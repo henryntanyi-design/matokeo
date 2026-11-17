@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../lib/timetable.php';
+require_once __DIR__ . '/../lib/timetable_auto.php'; // tta_plan_streams() kwa mgawanyo wa stream kutoka idadi ya wanafunzi
 require_once __DIR__ . '/../lib/layout.php';
 require_school_admin();
 
@@ -12,18 +13,57 @@ $year = teaching_year((int)($_GET['year_id'] ?? $_POST['year_id'] ?? 0));
 $group = (string)($_GET['group'] ?? $_POST['group'] ?? 'ordinary');
 if (!in_array($group, ['ordinary', 'advance', 'all'], true)) $group = 'ordinary';
 
-/* Streams (hiari): kila stream inakuwa safu yake ya ratiba. */
-$fStreamsRaw = is_post() ? trim((string)($_POST['streams'] ?? '')) : '';
-$fStreams = tt_normalize_streams($fStreamsRaw);
-$streamList = $fStreams ?: [''];
+$isPost = is_post();
+
+$classes = tt_classes_for_group($group);
+$classMap = [];
+foreach ($classes as $c) $classMap[(int)$c['id']] = $c;
+
+/* ---------------- Mikondo (streams) ---------------- */
+
+// Kikomo cha wanafunzi kwa mkondo: mgawanyo wa automatic hutumia hii.
+$fMaxPerStream = (int)($_POST['max_per_stream'] ?? $_GET['max_per_stream'] ?? TTA_DEFAULT_MAX_PER_STREAM);
+$fMaxPerStream = max(1, min(500, $fMaxPerStream));
+
+// Idadi ya mikondo kwa kila darasa; 0 = automatic kutoka idadi ya wanafunzi.
+$countBag = is_array($_POST['streams_class'] ?? null) ? $_POST['streams_class']
+          : (is_array($_GET['streams_class'] ?? null) ? $_GET['streams_class'] : []);
+$classStreamCount = [];
+foreach ($countBag as $cid => $n) {
+    $classStreamCount[(int)$cid] = max(0, min(TTA_MAX_STREAMS, (int)$n));
+}
+
 $streamSuggestions = teaching_stream_options($school_id);
+$fStreamsRaw = trim((string)($_POST['streams'] ?? $_GET['streams'] ?? ''));
+$providedLabels = tt_normalize_streams($fStreamsRaw);
+
+// Mpango wa kila darasa: automatic (0) au idadi iliyowekwa kwa mkono.
+$classPlans = [];
+if ($classMap) {
+    try {
+        foreach (array_keys($classMap) as $cid) {
+            $classPlans[(int)$cid] = tta_plan_streams($school_id, (int)$cid, $fMaxPerStream, (int)($classStreamCount[(int)$cid] ?? 0));
+        }
+    } catch (Exception $e) {
+        // Bila safu ya `stream` kwenye students, tunaendelea bila kugawanya.
+        $classPlans = [];
+    }
+}
+
+// Majina ya mikondo kwa kila darasa (A, B, C... au yaliyowekwa kwa mkono).
+$streamMap = tta_stream_map($classPlans, $providedLabels);
+$labelPool = $streamMap['labels'];
+$classStreams = $streamMap['classes'];
+foreach ($classMap as $cid => $c) {
+    if (!isset($classStreams[(int)$cid])) $classStreams[(int)$cid] = [''];
+}
 
 $defaultBreaks = [
-    ['name' => 'Tea Break', 'start' => '10:00', 'end' => '10:30'],
-    ['name' => 'Lunch Break', 'start' => '12:30', 'end' => '13:10'],
+    ['name' => 'Tea Break', 'start' => '10:40', 'end' => '11:10'],
+    ['name' => 'Lunch Break', 'start' => '14:30', 'end' => '15:10'],
 ];
 $defaultEvents = [
-    ['name' => 'Religion', 'day' => 'FRI', 'start' => '13:50', 'end' => '14:30'],
+    ['name' => 'Religion', 'day' => 'FRI', 'start' => '13:20', 'end' => '14:00'],
 ];
 
 $errors = [];
@@ -31,21 +71,38 @@ $savedId = 0;
 
 if (is_post()) {
     csrf_check();
-    $check = tt_validate_input($_POST, $school_id);
+    // Mikondo ya kila darasa inaingizwa kwa mpangilio wa $labelPool (A, B, C...).
+    $input = $_POST;
+    $input['streams'] = $labelPool;
+    $check = tt_validate_input($input, $school_id);
     $data = $check['data'];
     $errors = $check['errors'];
 
     if (!$errors) {
-        $result = tt_generate($data, teaching_assignments_map($school_id));
-        if (!$result['ok']) {
-            $errors = array_merge($errors, $result['errors']);
-        } else {
-            try {
-                $savedId = tt_save($school_id, (int)$year['id'], $data, $data['requirements'], $result['entries'], (int)($me['id'] ?? 0));
-                flash('success', 'The timetable was generated successfully. Click <b>Publish</b> so that teachers and students see it as the official timetable.');
-                redirect('teaching/timetable.php?id=' . $savedId);
-            } catch (Exception $e) {
-                $errors[] = 'Could not save the timetable: ' . $e->getMessage();
+        $assignMap = teaching_assignments_map($school_id);
+        $weekSlots = (int)($data['capacity'] ?? 0);
+
+        // Mgongano wa kudumu: mwalimu anahitajika vipindi vingi kuliko nafasi za wiki.
+        foreach (tt_teacher_load($data['requirements'], $assignMap, $weekSlots) as $t) {
+            $errors[] = 'Teacher ' . $t['name'] . ' is required for ' . $t['periods']
+                . ' periods a week but only ' . $weekSlots . ' slots exist. Reduce that teacher\'s periods, add sessions per day, or include Saturday.';
+        }
+
+        if (!$errors) {
+            $result = tt_generate($data, $assignMap);
+            if (!$result['ok']) {
+                $errors = array_merge($errors, $result['errors']);
+            } else {
+                try {
+                    $savedId = tt_save($school_id, (int)$year['id'], $data, $data['requirements'], $result['entries'], (int)($me['id'] ?? 0));
+                    $clash = tt_clash_report($result['entries']);
+                    flash('success', 'The timetable was generated successfully (' . count($result['entries']) . ' periods, '
+                        . (int)$clash['teacher'] . ' teacher clashes, ' . (int)$clash['stream'] . ' class clashes).'
+                        . ' Click <b>Publish</b> so that teachers and students see it as the official timetable.');
+                    redirect('teaching/timetable.php?id=' . $savedId);
+                } catch (Exception $e) {
+                    $errors[] = 'Could not save the timetable: ' . $e->getMessage();
+                }
             }
         }
     }
@@ -53,7 +110,6 @@ if (is_post()) {
 
 /* ---------------- Form values ---------------- */
 
-$isPost = is_post();
 $fSessions = $isPost ? (int)($_POST['sessions_per_day'] ?? 11) : 11;
 $fSessions = max(1, min(14, $fSessions));
 $fDuration = $isPost ? (int)($_POST['session_duration'] ?? 40) : 40;
@@ -74,11 +130,9 @@ $days = tt_days($fSat, $fSun);
 $cfgBreaks = tt_normalize_breaks($rawBreaks);
 $cfgEvents = tt_normalize_events($rawEvents, $days);
 $slots = teaching_timetable_timeslots($fSessions, $fDuration, $fStart, $cfgBreaks);
-$capacity = tt_capacity(['days' => $days, 'slots' => $slots, 'events' => $cfgEvents]);
-
-$classes = tt_classes_for_group($group);
-$classMap = [];
-foreach ($classes as $c) $classMap[(int)$c['id']] = $c;
+// Vipindi vya lazima pekee (kabla ya lunch); baada ya lunch ni remedial.
+$capacity = tt_compulsory_capacity(['days' => $days, 'slots' => $slots, 'breaks' => $cfgBreaks, 'events' => $cfgEvents]);
+$remedialSlots = count(tt_remedial_nos(['days' => $days, 'slots' => $slots, 'breaks' => $cfgBreaks]));
 
 /* Requirements: values submitted by POST, otherwise defaults (kwa kila stream). */
 $reqValues = [];
@@ -89,16 +143,17 @@ if ($isPost) {
             if (!is_array($byStream)) $byStream = [0 => $byStream];
             foreach ($byStream as $si => $n) {
                 $si = (int)$si;
-                if (!isset($streamList[$si])) continue;
+                if (!isset($classStreams[(int)$cid][$si])) continue;
                 $reqValues[(int)$cid][(int)$sid][$si] = max(0, (int)$n);
             }
         }
     }
 } else {
     $defaults = tt_default_requirements($classes, $capacity);
-    foreach (array_keys($streamList) as $si) {
-        foreach ($defaults as $r) {
-            $reqValues[(int)$r['class_id']][(int)$r['subject_id']][$si] = (int)$r['periods_per_week'];
+    foreach ($defaults as $r) {
+        $rcid = (int)$r['class_id'];
+        foreach (array_keys($classStreams[$rcid] ?? ['']) as $si) {
+            $reqValues[$rcid][(int)$r['subject_id']][$si] = (int)$r['periods_per_week'];
         }
     }
 }
@@ -121,7 +176,7 @@ $totalAssignments = (int)q_val('SELECT COUNT(*) FROM teacher_assignments ta JOIN
 $missingTeachers = 0;
 foreach ($classMap as $cid => $c) {
     foreach ($classSubjects[$cid] ?? [] as $s) {
-        foreach ($streamList as $si => $stream) {
+        foreach ($classStreams[(int)$cid] ?? [''] as $si => $stream) {
             if ((int)($reqValues[$cid][(int)$s['id']][$si] ?? 0) > 0
                 && !tt_assignment_for($assignMap, $cid, (int)$s['id'], (string)$stream)) $missingTeachers++;
         }
@@ -155,7 +210,8 @@ teaching_nav('timetable');
     <li>Make sure every subject has an assigned teacher.</li>
     <li>Make sure the session and break times do not overlap.</li>
     <li>You can change the number of periods per week for each class and subject.</li>
-    <li>If you enter streams, each stream gets its own row (for example: Form I A, Form I B); leave the stream empty for the whole class.</li>
+    <li>If you enter streams, each stream gets its own row (for example: Form I A, Form I B); leave the stream names empty to split the class from enrolment.</li>
+    <li>Periods are placed without clashes: one teacher is never in two classes at the same time, and no stream gets two subjects in the same period.</li>
     <li>If generation fails, add more sessions per day or include Saturday.</li>
   </ul>
 </div></div>
@@ -197,13 +253,60 @@ teaching_nav('timetable');
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-12 col-md-4 d-flex gap-2">
-        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-repeat"></i> Load classes and subjects</button>
+      <div class="col-12 col-md-2">
+        <label class="form-label small fw-bold mb-1">Max students / stream</label>
+        <input type="number" name="max_per_stream" class="form-control form-control-sm" min="1" max="500" value="<?php echo (int)$fMaxPerStream; ?>">
       </div>
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-arrow-repeat"></i> Apply</button>
+      </div>
+      <?php if ($classMap): ?>
+        <div class="col-12">
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-1">
+              <thead>
+                <tr>
+                  <th>Class</th>
+                  <th class="text-center">Students</th>
+                  <th class="text-center">Auto streams</th>
+                  <th style="width:170px">Streams (0 = auto)</th>
+                  <th>Building</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($classMap as $cid => $c): $cid = (int)$cid; $p = $classPlans[$cid] ?? null; ?>
+                  <tr>
+                    <td class="fw-bold"><?php echo h($c['name']); ?></td>
+                    <td class="text-center"><?php echo (int)($p['total'] ?? 0); ?></td>
+                    <td class="text-center"><?php echo (int)($p['auto_count'] ?? 1); ?></td>
+                    <td>
+                      <input type="number" name="streams_class[<?php echo $cid; ?>]" class="form-control form-control-sm" min="0" max="<?php echo TTA_MAX_STREAMS; ?>" value="<?php echo (int)($classStreamCount[$cid] ?? 0); ?>">
+                    </td>
+                    <td class="small">
+                      <?php $lbl = $classStreams[$cid] ?? ['']; ?>
+                      <?php echo ($lbl === [''])
+                          ? '<span class="text-muted">Whole class</span>'
+                          : h(implode(', ', $lbl)); ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <div class="form-text">
+            0 = split automatically from enrolment (above the max students per stream).
+            Set a number to fix the streams of that class &mdash; each class can have a different number.
+            Click <b>Apply</b> after changing the numbers so the period table below follows.
+          </div>
+        </div>
+      <?php endif; ?>
     </form>
     <div class="small text-muted mt-2">
-      The selected group has <b><?php echo count($classMap); ?></b> class(es). Period slots per week for each class:
+      The selected group has <b><?php echo count($classMap); ?></b> class(es). Compulsory period slots per week for each class:
       <b><?php echo (int)$capacity; ?></b> (days <?php echo count($days); ?> &times; sessions <?php echo (int)$fSessions; ?>).
+      <?php if ($remedialSlots > 0): ?>
+        Sessions after lunch are <b>remedial</b> (<?php echo (int)$remedialSlots; ?> per day) and are filled with a science/art mix.
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -216,6 +319,10 @@ teaching_nav('timetable');
   <?php echo csrf_field(); ?>
   <input type="hidden" name="year_id" value="<?php echo (int)$year['id']; ?>">
   <input type="hidden" name="group" value="<?php echo h($group); ?>">
+  <input type="hidden" name="max_per_stream" value="<?php echo (int)$fMaxPerStream; ?>">
+  <?php foreach ($classMap as $cid => $c): ?>
+    <input type="hidden" name="streams_class[<?php echo (int)$cid; ?>]" value="<?php echo (int)($classStreamCount[(int)$cid] ?? 0); ?>">
+  <?php endforeach; ?>
 
   <div class="card shadow-sm mb-3">
     <div class="card-header bg-white fw-bold">Basic settings</div>
@@ -237,14 +344,28 @@ teaching_nav('timetable');
           <label class="form-label small fw-bold mb-1">End time</label>
           <input type="time" name="end_time" class="form-control form-control-sm" required value="<?php echo h($fEnd); ?>">
         </div>
-        <div class="col-12">
-          <label class="form-label small fw-bold mb-1">Streams (optional)</label>
-          <input type="text" name="streams" class="form-control form-control-sm" list="ttStreamOptions" maxlength="240" value="<?php echo h($fStreamsRaw); ?>" placeholder="Example: A, B (leave empty for the whole class)">
+        <div class="col-12 col-lg-8">
+          <label class="form-label small fw-bold mb-1">Stream names (optional)</label>
+          <input type="text" name="streams" class="form-control form-control-sm" list="ttStreamOptions" maxlength="240" value="<?php echo h($fStreamsRaw); ?>" placeholder="Example: A, B (leave empty to split from enrolment)">
           <datalist id="ttStreamOptions">
             <?php foreach ($streamSuggestions as $st): ?><option value="<?php echo h($st); ?>"><?php endforeach; ?>
           </datalist>
-          <div class="form-text">Enter streams separated by commas. Each stream gets its own timetable row (for example: Form I A, Form I B). Leave empty for the whole class. Up to 12 streams.</div>
+          <div class="form-text">
+            Leave the names empty to use A, B, C... Each class uses as many names as its own stream count above.
+            Every stream gets its own timetable rows (for example: Form I A, Form I B).
+          </div>
         </div>
+        <?php if ($classPlans): ?>
+          <div class="col-12">
+            <div class="alert alert-light border py-2 px-3 mb-0 small">
+              <i class="bi bi-diagram-3 text-primary"></i> Streams per class:
+              <?php foreach ($classMap as $cid => $c): $cid = (int)$cid; $lbl = $classStreams[$cid] ?? ['']; ?>
+                <span class="badge text-bg-light border ms-1"><?php echo h($c['name']); ?>:
+                  <?php echo ($lbl === ['']) ? 'whole class' : h(implode(', ', $lbl)); ?></span>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        <?php endif; ?>
         <div class="col-6 col-lg-3">
           <div class="form-check mt-3">
             <input class="form-check-input" type="checkbox" name="include_saturday" id="includeSaturday" value="1"<?php echo $fSat ? ' checked' : ''; ?>>
@@ -350,7 +471,7 @@ teaching_nav('timetable');
           <tbody>
             <?php $sn = 0; foreach ($classMap as $cid => $c): ?>
               <?php $subs = $classSubjects[$cid] ?? []; if (!$subs) continue; ?>
-              <?php foreach ($streamList as $si => $stream): $label = tt_entity_name((string)$c['name'], (string)$stream); $tkey = (int)$cid . '|' . (int)$si; ?>
+              <?php foreach ($classStreams[(int)$cid] ?? [''] as $si => $stream): $label = tt_entity_name((string)$c['name'], (string)$stream); $tkey = (int)$cid . '|' . (int)$si; ?>
                 <tr class="table-light">
                   <td colspan="4" class="fw-bold"><?php echo h($label); ?></td>
                   <td class="fw-bold text-center">
@@ -396,8 +517,8 @@ function ttAddBreak() {
   var i = breakSeq++;
   var html = '<div class="row g-2 align-items-end mb-2 tt-break-row">'
     + '<div class="col-12 col-md-4"><label class="form-label small fw-bold mb-1">Name</label><input type="text" name="breaks[' + i + '][name]" class="form-control form-control-sm" placeholder="Example: Breakfast"></div>'
-    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="breaks[' + i + '][start]" class="form-control form-control-sm" value="10:00"></div>'
-    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="breaks[' + i + '][end]" class="form-control form-control-sm" value="10:30"></div>'
+    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="breaks[' + i + '][start]" class="form-control form-control-sm" value="10:40"></div>'
+    + '<div class="col-5 col-md-3"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="breaks[' + i + '][end]" class="form-control form-control-sm" value="11:10"></div>'
     + '<div class="col-2 col-md-2"><button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="ttRemoveRow(this)"><i class="bi bi-trash"></i></button></div>'
     + '</div>';
   document.getElementById('breakRows').insertAdjacentHTML('beforeend', html);
@@ -411,8 +532,8 @@ function ttAddEvent() {
     + '<option value="<?php echo h($code); ?>"><?php echo h($label); ?></option>'
     <?php endforeach; ?>
     + '</select></div>'
-    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="events[' + i + '][start]" class="form-control form-control-sm" value="13:50"></div>'
-    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="events[' + i + '][end]" class="form-control form-control-sm" value="14:30"></div>'
+    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">Start</label><input type="time" name="events[' + i + '][start]" class="form-control form-control-sm" value="13:20"></div>'
+    + '<div class="col-6 col-md-2"><label class="form-label small fw-bold mb-1">End</label><input type="time" name="events[' + i + '][end]" class="form-control form-control-sm" value="14:00"></div>'
     + '<div class="col-2 col-md-1"><button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="ttRemoveRow(this)"><i class="bi bi-trash"></i></button></div>'
     + '</div>';
   document.getElementById('eventRows').insertAdjacentHTML('beforeend', html);

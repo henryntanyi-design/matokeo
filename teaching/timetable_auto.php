@@ -39,10 +39,10 @@ $duration = tta_int_in($src['session_duration'] ?? 40, 15, 120, 40);
 $startTime = tta_time_in($src['start_time'] ?? '08:00', '08:00');
 $endTime = tta_time_in($src['end_time'] ?? '16:30', '16:30');
 $includeSaturday = !empty($src['include_saturday']);
-$teaStart = tta_time_in($src['tea_start'] ?? '10:00', '10:00');
-$teaEnd = tta_time_in($src['tea_end'] ?? '10:30', '10:30');
-$lunchStart = tta_time_in($src['lunch_start'] ?? '12:30', '12:30');
-$lunchEnd = tta_time_in($src['lunch_end'] ?? '13:10', '13:10');
+$teaStart = tta_time_in($src['tea_start'] ?? '10:40', '10:40');
+$teaEnd = tta_time_in($src['tea_end'] ?? '11:10', '11:10');
+$lunchStart = tta_time_in($src['lunch_start'] ?? '14:30', '14:30');
+$lunchEnd = tta_time_in($src['lunch_end'] ?? '15:10', '15:10');
 
 $days = tt_days($includeSaturday, false);
 $breaks = tt_normalize_breaks([
@@ -50,7 +50,8 @@ $breaks = tt_normalize_breaks([
     ['name' => 'LUNCH BREAK', 'start' => $lunchStart, 'end' => $lunchEnd],
 ]);
 $slots = teaching_timetable_timeslots($sessions, $duration, $startTime, $breaks);
-$capacity = tt_capacity(['days' => $days, 'slots' => $slots, 'events' => []]);
+// Vipindi vya lazima pekee: baada ya lunch ni saa za remedial.
+$capacity = tt_compulsory_capacity(['days' => $days, 'slots' => $slots, 'breaks' => $breaks, 'events' => []]);
 $morningSlots = 0;
 $lunchCut = teaching_time_minutes($lunchStart);
 foreach ($slots['items'] as $it) {
@@ -276,9 +277,9 @@ teaching_nav('timetable_auto');
         <div class="col-12"><hr class="my-1"></div>
 
         <div class="col-6 col-lg-3">
-          <label class="form-label small fw-bold mb-1">Streams (manual override)</label>
+          <label class="form-label small fw-bold mb-1">Streams for this class</label>
           <input type="number" name="streams" class="form-control form-control-sm" min="0" max="<?php echo TTA_MAX_STREAMS; ?>" value="<?php echo (int)$streamsOverride; ?>">
-          <div class="form-text">0 = automatic from enrolment.</div>
+          <div class="form-text">0 = automatic from enrolment. Each class can use a different number.</div>
         </div>
         <div class="col-12 col-lg-5">
           <label class="form-label small fw-bold mb-1">Stream names (optional)</label>

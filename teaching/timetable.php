@@ -131,13 +131,13 @@ if ($class_id) {
     foreach ($classRows as $c) if ((int)$c['id'] === $class_id) $className = (string)$c['name'];
 }
 
-$title = 'TEACHING TIMETABLE';
+$title = 'GENERAL TEACHING TIMETABLE';
 if (!$isAdmin) $title = 'MY TEACHING TIMETABLE';
 elseif ($teacher_id && $teacherName !== '') $title = 'TEACHER TIMETABLE: ' . strtoupper($teacherName);
 elseif ($className !== '') $title = 'CLASS TIMETABLE: ' . strtoupper(trim($className . ($stream !== '' ? ' ' . $stream : '')));
 
-$metaBits = ['YEAR: ' . ($year['name'] ?? '-')];
-if ($tt) $metaBits = array_merge($metaBits, tt_meta_bits($tt));
+// Kichwa cha nyaraka: mstari wa ziada huonekana tu kama kuna filter.
+$metaBits = [];
 if ($subject_id && $subjectName !== '') $metaBits[] = 'SUBJECT: ' . strtoupper($subjectName);
 if ($teacher_id && $teacherName !== '') $metaBits[] = 'TEACHER: ' . strtoupper($teacherName);
 if ($stream !== '') $metaBits[] = 'STREAM: ' . strtoupper($stream);
@@ -168,17 +168,17 @@ if (($ready && $tt && ($_GET['action'] ?? '') === 'export') && !empty($matrix['r
     $fname = implode('_', $parts);
 
     $sc = active_school();
-    $schoolName = (string)($sc['name'] ?? system_name());
+    $schoolName = tt_school_title($sc['name'] ?? system_name());
 
     if ($format === 'pdf_a4') tt_send_pdf($fname, $title, $meta, $matrix, 'A4', $schoolName);
     elseif ($format === 'pdf_a3') tt_send_pdf($fname, $title, $meta, $matrix, 'A3', $schoolName);
-    else tt_send_xlsx($fname, $title, $meta, $matrix, 'A3');
+    else tt_send_xlsx($fname, $title, $meta, $matrix, 'A3', $schoolName);
 }
 
 $statusLabels = ['Active' => 'Published', 'Pending' => 'Unpublished', 'Archived' => 'Archived', 'all' => 'All'];
 $exportBase = array_merge($filterParams, ['action' => 'export']);
 
-layout_start('Teaching Timetable', 'teach');
+layout_start('General Teaching Timetable', 'teach');
 teaching_nav('timetable');
 ?>
 
@@ -191,7 +191,7 @@ teaching_nav('timetable');
 
 <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 d-print-none">
   <div>
-    <h5 class="fw-bold mb-1"><i class="bi bi-calendar3-week"></i> Teaching Timetable</h5>
+    <h5 class="fw-bold mb-1"><i class="bi bi-calendar3-week"></i> General Teaching Timetable</h5>
     <div class="text-muted small">Saved timetables in the MSSIS layout: day/class rows, numbered sessions with times, breaks and events.</div>
   </div>
   <div class="d-flex flex-wrap gap-2">
@@ -339,25 +339,28 @@ teaching_nav('timetable');
     </div>
   </div>
 
-  <div class="text-center mb-2">
-    <div class="fw-bold text-uppercase"><?php $sc = active_school(); echo h($sc ? $sc['name'] : system_name()); ?></div>
-    <div class="fw-semibold"><?php echo h($title); ?></div>
-    <div class="small text-muted"><?php echo h($meta); ?></div>
-  </div>
-
   <style>
   <?php echo tt_css(); ?>
   @media print{
     @page{size:A3 landscape;margin:6mm}
-    .tt-wrap{overflow:visible}
+    .tt-wrap{overflow:visible;border-radius:0;box-shadow:none}
     .tt-table{page-break-inside:auto}
     .tt-table thead{display:table-header-group}
     .tt-table tr{page-break-inside:avoid}
     .tt-table th,.tt-table td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .tt-doc-head{border-radius:0}
   }
   </style>
 
+  <div class="tt-doc-head mb-3">
+    <div class="tt-school"><?php $sc = active_school(); echo h(tt_school_title($sc ? $sc['name'] : system_name())); ?></div>
+    <div class="tt-title"><?php echo h($title); ?></div>
+    <?php if ($meta !== ''): ?><div class="tt-meta"><?php echo h($meta); ?></div><?php endif; ?>
+  </div>
+
   <?php echo tt_render_table($matrix); ?>
+
+  <?php echo tt_render_footer(tt_academic_master_name()); ?>
 
   <?php if ($matrix['stats']): ?>
     <div class="card shadow-sm mt-3 d-print-none">
@@ -370,7 +373,7 @@ teaching_nav('timetable');
         </div>
         <p class="small text-muted mt-2 mb-0">
           Total visible periods: <b><?php echo (int)array_sum($matrix['stats']); ?></b>.
-          <b>B</b> columns are breaks/events and are not used for lessons.
+          <b>B</b> columns are breaks (merged once across the whole week) and are not used for lessons. Compulsory periods end at lunch time; the periods after lunch are <b>remedial</b> and mix science with arts. Events (for example worship) are merged inside the periods they take, with their own style. A subject with 3 periods a week gets one <b>double</b> (two periods in a row) plus one single; 5 periods gets two doubles plus one single.
         </p>
       </div>
     </div>

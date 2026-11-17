@@ -100,6 +100,40 @@ function tta_plan_streams($school_id, $class_id, $max_per_stream = TTA_DEFAULT_M
 }
 
 /**
+ * Majina ya mikondo kwa kila darasa.
+ *
+ * Kila darasa hupata idadi yake ya mikondo (kutoka auto au iliyowekwa kwa
+ * mkono); darasa lenye mkondo mmoja linabaki darasa zima (jina tupu).
+ * Majina hutoka kwa mtumiaji au A, B, C...
+ *
+ * @param array $plans          cid => matokeo ya tta_plan_streams()
+ * @param array $providedLabels Majina yaliyowekwa kwa mkono (hiari)
+ * @return array{labels:array, classes:array} labels = dimbwi la majina, classes = cid => majina
+ */
+function tta_stream_map(array $plans, array $providedLabels = []) {
+    $max = 1;
+    foreach ($plans as $p) $max = max($max, (int)($p['count'] ?? 1));
+
+    $pool = [];
+    foreach ($providedLabels as $label) {
+        $label = trim((string)$label);
+        if ($label !== '' && !in_array($label, $pool, true)) $pool[] = $label;
+    }
+    foreach (tta_stream_labels($max) as $candidate) {
+        if (count($pool) >= $max) break;
+        if (in_array($candidate, $pool, true)) continue;
+        $pool[] = $candidate;
+    }
+
+    $classes = [];
+    foreach ($plans as $cid => $p) {
+        $n = max(1, (int)($p['count'] ?? 1));
+        $classes[(int)$cid] = $n > 1 ? array_slice($pool, 0, $n) : [''];
+    }
+    return ['labels' => $pool, 'classes' => $classes];
+}
+
+/**
  * Weekly periods per subject for every stream of one class.
  *
  * The total per stream cannot exceed the number of teaching slots, and no
@@ -166,9 +200,18 @@ function tta_week_requirements(array $class, $capacity, array $labels, array $da
  */
 function tta_attempt(array $data, array $assignMap, array $need, array $subjectInfo, $maxPerDay, $morningCutoff) {
     $days = $data['days'];
+    // Vipindi vya remedial hupangwa baada ya lunch, hivyo hapa tunatumia
+    // vipindi vya lazima pekee.
+    $remedialNos = tt_remedial_nos([
+        'days' => $days,
+        'slots' => $data['slots'],
+        'breaks' => $data['breaks'] ?? [],
+    ]);
     $sessionItems = [];
     foreach (($data['slots']['items'] ?? []) as $it) {
-        if (($it['type'] ?? '') === 'session') $sessionItems[] = $it;
+        if (($it['type'] ?? '') !== 'session') continue;
+        if (isset($remedialNos[(int)$it['no']])) continue;
+        $sessionItems[] = $it;
     }
 
     $daySlots = [];
@@ -182,6 +225,15 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
             if (!$blocked) $list[] = $s;
         }
         $daySlots[$day] = $list;
+    }
+
+    // Quota za vipindi vya lazima kwa siku, ili siku zote (pamoja na Ijumaa)
+    // zishiriki sawasawa badala ya siku za mwanzo kuchukua vipindi vyote.
+    $entityQuota = [];
+    $entityDayCount = [];
+    foreach ($need as $ekey => $ent) {
+        $entityQuota[$ekey] = tt_day_quotas($days, $daySlots, (int)array_sum($ent['subjects']));
+        foreach ($days as $d) $entityDayCount[$ekey][$d] = 0;
     }
 
     // Every slot of the week in time order, plus how many morning slots are left.
@@ -215,6 +267,9 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
                 'teacher' => $a ? (string)$a['full_name'] : '',
                 'hard' => tta_is_core_subject((string)$info['name'], (string)($info['abbr'] ?? '')),
                 'left' => (int)$n,
+                // Vipindi double: jozi = intdiv(n,2), kilichobaki ni single.
+                // Mf. vipindi 3 => double 1 + single 1; vipindi 5 => double 2 + single 1.
+                'dbl' => intdiv((int)$n, 2),
                 'day' => [],
             ];
         }
@@ -250,6 +305,40 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
     $entityOrder = array_keys($need);
     shuffle($entityOrder);
 
+    /* ---- Pass 0: vipindi double (masomo mawili mfululizo bila mapumziko) ---- */
+    foreach ($days as $day) {
+        $slotsOfDay = $daySlots[$day];
+        for ($i = 0; $i + 1 < count($slotsOfDay); $i++) {
+            if ((int)$slotsOfDay[$i]['end'] !== (int)$slotsOfDay[$i + 1]['start']) continue;
+            $s1 = $slotsOfDay[$i];
+            $s2 = $slotsOfDay[$i + 1];
+            foreach ($entityOrder as $ekey) {
+                if (($entityDayCount[$ekey][$day] ?? 0) + 2 > ($entityQuota[$ekey][$day] ?? 0)) continue;
+                if (!empty($used[$ekey][$day][(int)$s1['no']]) || !empty($used[$ekey][$day][(int)$s2['no']])) continue;
+
+                $pick = null;
+                $bestScore = null;
+                $previous = $last[$ekey][$day] ?? 0;
+                foreach ($tasks[$ekey] as $sid => $t) {
+                    if ($t['dbl'] <= 0 || $t['left'] < 2) continue;
+                    $tid = (int)$t['teacher_id'];
+                    if ($tid && (!empty($busy[$day][(int)$s1['no']][$tid]) || !empty($busy[$day][(int)$s2['no']][$tid]))) continue;
+                    $perDay = $t['day'][$day] ?? 0;
+                    if ($perDay + 2 > $maxPerDay) continue;
+
+                    $score = [$perDay, $sid === $previous ? 1 : 0, -$t['left'], mt_rand()];
+                    if ($bestScore === null || $score < $bestScore) { $pick = $sid; $bestScore = $score; }
+                }
+                if ($pick === null) continue;
+
+                $place($ekey, $pick, $day, $s1);
+                $place($ekey, $pick, $day, $s2);
+                $tasks[$ekey][$pick]['dbl']--;
+                $entityDayCount[$ekey][$day] += 2;
+            }
+        }
+    }
+
     /* ---- Pass 1: fill the week slot by slot ---- */
     foreach ($week as $row) {
         $day = $row['day'];
@@ -258,6 +347,8 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
 
         foreach ($entityOrder as $ekey) {
             if (!empty($used[$ekey][$day][$slot['no']])) continue;
+            // Ruka kama siku hii imeshajaza fungu lake la vipindi.
+            if (($entityDayCount[$ekey][$day] ?? 0) >= ($entityQuota[$ekey][$day] ?? 0)) continue;
 
             $hardLeft = 0;
             foreach ($tasks[$ekey] as $t) if ($t['hard'] && $t['left'] > 0) $hardLeft += $t['left'];
@@ -276,6 +367,7 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
 
                 $score = [
                     $coreFirst ? ($t['hard'] ? 0 : 1) : ($t['hard'] ? 1 : 0), // subject class for this time of day
+                    ($t['left'] - 2 * $t['dbl']) > 0 ? 0 : 1,                   // single iliyotengwa kwanza
                     $perDay,                                                  // spread over the week
                     $sid === $previous ? 1 : 0,                                // no back-to-back repeat
                     -$t['left'],                                               // biggest need first
@@ -284,7 +376,10 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
                 if ($bestScore === null || $score < $bestScore) { $pick = $sid; $bestScore = $score; }
             }
             if ($pick === null) continue; // keep the period free instead of breaking a rule
+            $singles = $tasks[$ekey][$pick]['left'] - 2 * $tasks[$ekey][$pick]['dbl'];
             $place($ekey, $pick, $day, $slot);
+            if ($singles <= 0) $tasks[$ekey][$pick]['dbl']--; // double imevunjwa kuwa single
+            $entityDayCount[$ekey][$day]++;
         }
     }
 
@@ -325,6 +420,14 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
 
     $required = 0;
     foreach ($need as $ent) foreach ($ent['subjects'] as $n) $required += (int)$n;
+
+    // Vipindi vya remedial: baada ya lunch, mchanganyiko wa science na art.
+    $entries = array_merge($entries, tt_plan_remedial([
+        'days' => $days,
+        'slots' => $data['slots'],
+        'breaks' => $data['breaks'] ?? [],
+        'events' => $data['events'] ?? [],
+    ], $need, $assignMap, $subjectInfo, $busy));
 
     return [
         'entries' => $entries,
@@ -376,9 +479,10 @@ function tta_generate(array $data, array $assignMap = [], array $opts = []) {
     if (!$assignMap) $assignMap = teaching_assignments_map(active_school_id());
 
     $best = null;
+    // Mbegu ya random kwa kila ubunifu ili ratiba itofautiane kila mara.
+    $seedBase = random_int(1000, 999999);
     for ($attempt = 0; $attempt < $attempts; $attempt++) {
-        // Deterministic seed per attempt keeps results reproducible.
-        mt_srand(100003 + $attempt * 7919);
+        mt_srand($seedBase + $attempt * 7919);
         $result = tta_attempt($data, $assignMap, $need, $subjectInfo, $maxPerDay, $morningCutoff);
         if ($best === null || $result['unfilled'] < $best['unfilled']) $best = $result;
         if ($result['unfilled'] <= 0) { $best = $result; break; }
