@@ -14,6 +14,15 @@ jobs:
       - name: Pata code
         uses: actions/checkout@v4
 
+      # The locked packages support PHP 7.4-8.4 only, while ubuntu-latest ships a
+      # newer PHP, so pin a supported version and the extensions the vendor needs.
+      - name: Sanidi PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd, zip, mbstring, xml, dom, iconv, simplexml, xmlreader, xmlwriter, fileinfo, ctype
+          coverage: none
+
       - name: Jenga Composer vendor/
         run: composer install --no-interaction --no-progress --optimize-autoloader
 
