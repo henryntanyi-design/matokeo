@@ -18,15 +18,33 @@ jobs:
         run: composer install --no-interaction --no-progress --optimize-autoloader
 
       - name: Angalia FTP credentials
-        if: ${{ !secrets.FTP_SERVER || !secrets.FTP_PASS || (!secrets.FTP_USER && !secrets.FTP_USERNAME) }}
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USER: ${{ secrets.FTP_USER || secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
         run: |
-          echo "Missing required FTP secrets."
-          echo "Set these in GitHub repo Settings -> Secrets and variables -> Actions -> Secrets:"
-          echo "  FTP_SERVER"
-          echo "  FTP_PASS"
-          echo "  FTP_USER or FTP_USERNAME"
-          echo "Optional: FTP_SERVER_DIR (variable or secret) - defaults to ./public_html/"
-          exit 1
+          missing=0
+          if [ -z "$FTP_SERVER" ]; then
+            echo "::error::Missing secret FTP_SERVER"
+            missing=1
+          fi
+          if [ -z "$FTP_USER" ]; then
+            echo "::error::Missing secret FTP_USER (or FTP_USERNAME)"
+            missing=1
+          fi
+          if [ -z "$FTP_PASS" ]; then
+            echo "::error::Missing secret FTP_PASS"
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            echo "Set these in GitHub repo Settings -> Secrets and variables -> Actions -> Secrets:"
+            echo "  FTP_SERVER"
+            echo "  FTP_PASS"
+            echo "  FTP_USER or FTP_USERNAME"
+            echo "Optional: FTP_SERVER_DIR (variable or secret) - defaults to ./public_html/"
+            exit 1
+          fi
+          echo "FTP credentials are present."
 
       - name: Paka faili kwa FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
