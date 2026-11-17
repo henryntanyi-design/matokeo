@@ -33,6 +33,17 @@ layout_start('Classes', 'classes'); ?>
 .cls-hero{position:relative;overflow:hidden;border-radius:18px;padding:22px 24px;background:linear-gradient(120deg,#0b3d91 0%,#1b5bc4 55%,#2c6ed5 100%);color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;box-shadow:0 10px 24px rgba(11,61,145,.22)}
 .cls-hero:before{content:"";position:absolute;right:-40px;top:-70px;width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.08)}
 .cls-hero:after{content:"";position:absolute;right:90px;bottom:-80px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.06)}
+.cls-table thead th{font-size:.66rem;text-transform:uppercase;letter-spacing:.045em;color:#6b7a93;background:#f7f9fe;border-bottom:1px solid #e8eef9;white-space:nowrap;font-weight:800;padding-top:.62rem;padding-bottom:.62rem}
+.cls-table tbody td{padding-top:.5rem;padding-bottom:.5rem;border-color:#f0f4fb;vertical-align:middle}
+.cls-table tbody tr:hover{background:#fafcff}
+.cls-table tr.cls-editing{background:#fffdf4;box-shadow:inset 3px 0 0 #d39b1b}
+.cls-table tr.cls-editing:hover{background:#fff9e8}
+.cls-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:.95rem;color:#fff;flex:0 0 auto;background:linear-gradient(135deg,#0b8a3e,#20b15b);box-shadow:0 3px 8px rgba(11,138,62,.22)}
+.cls-table thead th,.cls-table tbody td{white-space:normal;word-break:break-word;overflow-wrap:anywhere}
+.cls-name{font-weight:800;color:#16203a;line-height:1.25;word-break:break-word;overflow-wrap:anywhere}
+.cls-meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:.7rem;color:#8a99b0;align-items:center}
+.cls-meta i{flex:0 0 auto}
+.cls-meta .cls-sort-order{display:inline-flex;align-items:center;gap:4px}
 .cls-hero .inner{position:relative;z-index:2;min-width:0}
 .cls-hero .kicker{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;font-weight:800;opacity:.78;display:flex;align-items:center;gap:6px}
 .cls-hero h1{font-size:1.65rem;font-weight:800;margin:5px 0 3px;letter-spacing:-.01em;color:#fff}
@@ -52,15 +63,7 @@ layout_start('Classes', 'classes'); ?>
 .cls-card-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid #eef2fa}
 .cls-card-h .t{font-weight:800;color:#16203a;display:flex;align-items:center;gap:8px}
 .cls-card-h .t i{color:#2c6ed5}
-.cls-table thead th{font-size:.66rem;text-transform:uppercase;letter-spacing:.045em;color:#6b7a93;background:#f7f9fe;border-bottom:1px solid #e8eef9;white-space:nowrap;font-weight:800;padding-top:.62rem;padding-bottom:.62rem}
-.cls-table tbody td{padding-top:.68rem;padding-bottom:.68rem;border-color:#f0f4fb;vertical-align:middle}
-.cls-table tbody tr:hover{background:#fafcff}
-.cls-table tr.cls-editing{background:#fffdf4;box-shadow:inset 3px 0 0 #d39b1b}
-.cls-table tr.cls-editing:hover{background:#fff9e8}
-.cls-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:1rem;color:#fff;flex:0 0 auto;background:linear-gradient(135deg,#0b8a3e,#20b15b);box-shadow:0 3px 8px rgba(11,138,62,.22)}
 .cls-mark.a{background:linear-gradient(135deg,#5b3fb5,#8a6fe0);box-shadow:0 3px 8px rgba(91,63,181,.22)}
-.cls-name{font-weight:700;color:#16203a;line-height:1.25}
-.cls-meta{font-size:.71rem;color:#8a99b0;display:flex;align-items:center;gap:4px;margin-top:2px}
 .cls-pill{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
 .cls-pill.o{background:#e8f7ee;color:#0b8a3e;border-color:#c6ecd6}
 .cls-pill.a{background:#f0ecfd;color:#5b3fb5;border-color:#ddd3f8}
@@ -110,6 +113,7 @@ layout_start('Classes', 'classes'); ?>
 @media(min-width:992px){.cls-form-card{position:sticky;top:16px}}
 @media(max-width:575px){.cls-hero{padding:18px}.cls-hero h1{font-size:1.32rem}}
 @media print{.cls-hero{background:#fff!important;color:#000!important;box-shadow:none}.cls-hero .actions,.cls-actions,.cls-form-card{display:none!important}}
+@media screen{and (-ms-high-contrast:none),(-ms-high-contrast:auto){.cls-table{-ms-overflow-style:scrollbar}.table-responsive{overflow-x:auto}}}
 </style>
 
 <div class="cls-hero no-print">
@@ -148,7 +152,7 @@ layout_start('Classes', 'classes'); ?>
                 <span class="cls-mark<?php echo $c['level'] === 'A' ? ' a' : ''; ?>"><i class="bi bi-<?php echo $c['level'] === 'A' ? 'mortarboard' : 'book'; ?>"></i></span>
                 <div style="min-width:0">
                   <div class="cls-name"><?php echo h($c['name']); ?></div>
-                  <div class="cls-meta"><i class="bi bi-sort-numeric-down"></i>Sort order: <?php echo (int)$c['sort_order']; ?></div>
+                  <div class="cls-meta cls-sort-order"><i class="bi bi-sort-numeric-down"></i> Sort order: <?php echo (int)$c['sort_order']; ?></div>
                 </div>
               </div>
             </td>
