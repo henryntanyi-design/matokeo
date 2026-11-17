@@ -4,7 +4,7 @@ require_once __DIR__ . '/../lib/layout.php';
 require_school_admin(); $school_id = active_school_id();
 
 /** Safu zinazohitajika kwenye template ya OASIS (zenye rangi + PREMS_NO). */
-const SIM_REQUIRED = ['PREMSNO', 'FIRSTNAME', 'LASTNAME', 'SEX', 'CLASS', 'GUARDIANNAME', 'GUARDIANPHONE'];
+const SIM_REQUIRED = ['PREMSNO', 'FIRSTNAME', 'LASTNAME', 'SEX', 'CLASS', 'STREAM', 'GUARDIANNAME', 'GUARDIANPHONE'];
 
 function sim_cell_str($v) {
     if (is_float($v) && floor($v) == $v) return (string)(int)$v;
@@ -221,6 +221,7 @@ if (is_post()) {
             if ($ln === '') $e[] = 'LAST_NAME empty';
             if ($sx === '') $e[] = 'SEX not M/F';
             if (!isset($classByName[$cl])) $e[] = 'Class "' . $clRaw . '" not found';
+            if ($stream === '') $e[] = 'STREAM empty';
             if ($gn === '') $e[] = 'GUARDIAN_NAME empty';
             if ($gp === '') $e[] = 'GUARDIAN_PHONE empty';
             if ($e) { $errors[] = 'Line ' . $line . ': ' . implode('; ', $e); $errByRow[$line] = $e; continue; }

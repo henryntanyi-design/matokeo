@@ -23,6 +23,7 @@ if (is_post()) {
     if ($f['last_name'] === '') $missing[] = 'surname';
     if ($f['sex'] === '') $missing[] = 'sex';
     if (!q_val('SELECT 1 FROM classes WHERE id = ?', [$f['class_id']])) $missing[] = 'class';
+    if ($f['stream'] === '') $missing[] = 'stream';
     if ($f['guardian_name'] === '') $missing[] = 'parent/guardian name';
     if ($f['guardian_phone'] === '') $missing[] = 'parent phone number';
 
@@ -182,8 +183,9 @@ layout_start($id ? 'Edit student details' : 'New Student registration', 'student
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">Stream</label>
-                    <input name="stream" class="form-control" value="<?php echo $v('stream'); ?>">
+                    <label class="form-label small fw-bold">Stream <span style="color:#dc3545;font-weight:700">*</span></label>
+                    <input name="stream" class="form-control" required value="<?php echo $v('stream'); ?>" placeholder="e.g. A">
+                    <div class="form-text">Required. Use the student's stream letter or name (A, B, Science...).</div>
                 </div>
                 <div class="col-12"><hr class="my-1"><div class="small fw-bold text-primary text-uppercase" style="letter-spacing:.06em">Parent / Guardian</div></div>
                 <div class="col-md-6">
