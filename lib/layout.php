@@ -135,9 +135,7 @@ body{background:#f3f5fb}
       <img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo" class="topbar-logo">
       <div class="topbar-text">
         <div class="topbar-title" title="<?php echo h($appName); ?>"><?php echo h($appShort); ?></div>
-        <div class="topbar-sub"><?php echo h($sc['district'] ?? ''); ?><?php echo !empty($sc['region']) ? ', ' . h($sc['region']) : ''; ?><?php if (!empty($sc['centre_no'])): ?><span class="mx-2">|</span><?php echo h($sc['centre_no']); ?><span class="mx-2">-</span><?php echo h($sc ? $sc['name'] . ' SECONDARY SCHOOL' : ($u && $u['role'] === 'super' ? 'Ngazi ya Wilaya' : $title)); ?>
-                      <?php endif; ?>
-                </div>
+        <?php /* Namba ya kituo, wilaya na mkoa hauonyeshwi kwenye topbar. */ ?>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
