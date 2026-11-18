@@ -1846,9 +1846,10 @@ function tt_render_table(array $matrix, $forPdf = false, $paper = 'A4') {
 
                 if ($type === 'break') {
                     if ($pdf) {
-                        // PDF: cell moja ndefu kwa siku (inaonekana kama safu
-                        // moja iliyounganishwa chini ya kichwa cha mapumziko).
-                        if ($ri === 0) $out .= '<td rowspan="' . $span . '" class="tt-break"></td>';
+                        // PDF: kila safu inapata cell yake ya mapumziko ili
+                        // safu za break (Tea/Lunch) zisipotee wala kuvurugika
+                        // wakati wa pagination; kichwa huonyesha jina.
+                        $out .= '<td class="tt-break"></td>';
                     } elseif (!empty($breakCovered[$ci])) {
                         if ($ri === 0) {
                             $out .= '<td rowspan="' . $span . '" class="tt-break"><div class="tt-vert">' . h((string)$col['name']) . '</div></td>';
