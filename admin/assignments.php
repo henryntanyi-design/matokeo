@@ -55,6 +55,7 @@ if ($tid) {
                     ORDER BY c.sort_order, s.name', [$tid]);
 }
 $list = q_all('SELECT ta.id, ta.teacher_id, u.full_name, c.name AS cname, s.name AS sname' . ($hasStream ? ', ta.stream' : ", '' AS stream") . ' FROM teacher_assignments ta JOIN users u ON u.id = ta.teacher_id JOIN classes c ON c.id = ta.class_id JOIN subjects s ON s.id = ta.subject_id WHERE u.school_id = ?'
+    . ($hasStream ? " AND ta.stream <> ''" : '')
     . ($tid ? ' AND ta.teacher_id = ' . $tid : '') . ' ORDER BY u.full_name, c.sort_order, s.name', [$school_id]);
 
 /* Streams zilizopo: kutoka kwa wanafunzi na ugawaji uliopo. */
