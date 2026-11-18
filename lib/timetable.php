@@ -1821,7 +1821,11 @@ function tt_render_table(array $matrix, $forPdf = false, $paper = 'A4') {
         $ri = 0;
         foreach ($dayRow['classes'] as $classRow) {
             $out .= '<tr>';
-            if ($ri === 0) {
+            if ($pdf) {
+                // PDF: siku inaonyeshwa kwenye kila safu ili pagination
+                // isiharibu mpangilio wa safu ya Day na Form.
+                $out .= '<td class="tt-day">' . h($dayRow['label']) . '</td>';
+            } elseif ($ri === 0) {
                 $out .= '<td rowspan="' . $span . '" class="tt-day">' . h($dayRow['label']) . '</td>';
             }
             $out .= '<td class="tt-form">' . h($classRow['label'] ?? $classRow['class']['name']) . '</td>';
