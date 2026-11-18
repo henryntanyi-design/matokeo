@@ -32,6 +32,12 @@ $statCandidates = $safeVal('SELECT COUNT(DISTINCT ec.id) FROM exam_schools es
                             JOIN exam_candidates ec ON ec.exam_id = es.exam_id AND ec.school_id = es.school_id
                             WHERE es.published = 1');
 
+/* System-wide registration totals (cards on the homepage). */
+$statStaff     = $safeVal('SELECT COUNT(*) FROM users');
+$statSchoolsAll = $safeVal('SELECT COUNT(*) FROM schools');
+$statStudents  = $safeVal('SELECT COUNT(*) FROM students');
+$statPublished = $safeVal('SELECT COUNT(*) FROM exam_schools WHERE published = 1');
+
 /* Published exams za hivi karibuni kwa strip ndogo, + filter ya mwaka. */
 $latestYear = trim((string)($_GET['year'] ?? ''));
 if (!preg_match('/^\d{4}$/', $latestYear)) $latestYear = '';
@@ -112,12 +118,14 @@ a{text-decoration:none}
 .hm-hero-card .mini:last-child{border-bottom:0}
 .hm-hero-card .mini b{font-size:1.45rem;line-height:1}
 .hm-strip{background:#fff;border-bottom:1px solid var(--line);padding:20px 0}
-.hm-strip .row{row-gap:14px}
-.hm-strip .stat{display:flex;align-items:center;gap:12px}
-.hm-strip .stat .ic{width:42px;height:42px;border-radius:12px;background:#edf3ff;color:var(--brand);
-  display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem;flex:0 0 auto}
-.hm-strip .stat b{display:block;font-size:1.4rem;line-height:1.05;color:var(--brand);font-weight:800}
-.hm-strip .stat span{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.hm-stat-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.hm-stat-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:16px;
+  padding:18px;box-shadow:0 16px 34px -32px rgba(11,61,145,.6);transition:transform .18s,box-shadow .18s,border-color .18s}
+.hm-stat-card:hover{transform:translateY(-2px);border-color:#b9cdf0;box-shadow:0 20px 38px -28px rgba(11,61,145,.55)}
+.hm-stat-card .ic{width:46px;height:46px;border-radius:13px;background:#edf3ff;color:var(--brand);
+  display:inline-flex;align-items:center;justify-content:center;font-size:1.15rem;flex:0 0 auto}
+.hm-stat-card b{display:block;font-size:1.5rem;line-height:1.05;color:var(--brand);font-weight:800}
+.hm-stat-card span{display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
 .hm-latest{padding:26px 0 6px}
 .hm-latest-title{font-size:.95rem;font-weight:800;color:var(--ink);margin:0}
 .hm-latest-all{font-size:.8rem;font-weight:700;color:var(--brand2)}
@@ -185,6 +193,8 @@ a{text-decoration:none}
 .hm-foot{background:#0a2f70;color:rgba(255,255,255,.72);font-size:.8rem;padding:26px 0}
 .hm-foot a{color:rgba(255,255,255,.9);font-weight:600}
 .hm-foot a:hover{color:#fff}
+@media (max-width:991px){.hm-stat-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:479px){.hm-stat-cards{grid-template-columns:1fr}}
 @media (max-width:767px){
   .hm-hero{padding:56px 0 64px}
   .hm-section{padding:52px 0}
@@ -247,12 +257,13 @@ a{text-decoration:none}
   </div>
 </header>
 
-<section class="hm-strip" aria-label="Published exam statistics">
+<section class="hm-strip" aria-label="System statistics">
   <div class="container">
-    <div class="row g-3">
-      <div class="col-md-4"><div class="stat"><span class="ic"><i class="bi bi-journal-text"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statExams; ?>"><?php echo (int)$statExams; ?></b><span>Published exams</span></div></div></div>
-      <div class="col-md-4"><div class="stat"><span class="ic"><i class="bi bi-buildings"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statSchools; ?>"><?php echo (int)$statSchools; ?></b><span>Schools with results</span></div></div></div>
-      <div class="col-md-4"><div class="stat"><span class="ic"><i class="bi bi-people"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statCandidates; ?>"><?php echo (int)$statCandidates; ?></b><span>Candidates with results</span></div></div></div>
+    <div class="hm-stat-cards">
+      <div class="hm-stat-card"><span class="ic"><i class="bi bi-person-badge"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statStaff; ?>"><?php echo (int)$statStaff; ?></b><span>Registered staff</span></div></div>
+      <div class="hm-stat-card"><span class="ic"><i class="bi bi-buildings"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statSchoolsAll; ?>"><?php echo (int)$statSchoolsAll; ?></b><span>Registered schools</span></div></div>
+      <div class="hm-stat-card"><span class="ic"><i class="bi bi-people-fill"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statStudents; ?>"><?php echo (int)$statStudents; ?></b><span>Registered students</span></div></div>
+      <div class="hm-stat-card"><span class="ic"><i class="bi bi-journal-check"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statPublished; ?>"><?php echo (int)$statPublished; ?></b><span>Published results</span></div></div>
     </div>
   </div>
 </section>
