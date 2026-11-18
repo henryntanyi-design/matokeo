@@ -119,9 +119,13 @@ a{text-decoration:none}
 .hm-hero-card .mini b{font-size:1.45rem;line-height:1}
 /* Kadi za takwimu: panel nyembamba iliyokaa katikati, inayogusa hero kidogo. */
 .hm-strip{background:transparent;border-bottom:0;padding:0 0 4px}
-.hm-stats-shell{max-width:940px;margin:-44px auto 0;position:relative;z-index:2;padding:14px 12px 12px;
-  background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);border:1px solid var(--line);border-radius:22px;
-  box-shadow:0 30px 60px -34px rgba(11,61,145,.55),0 4px 16px -10px rgba(11,61,145,.18)}
+.hm-stats-shell{max-width:940px;margin:-68px auto 0;position:relative;z-index:2;padding:14px 12px 12px;
+  background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);border:1px solid rgba(255,255,255,.8);border-radius:22px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 34px 70px -30px rgba(6,28,72,.45),0 4px 16px -10px rgba(11,61,145,.18)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .hm-stats-shell{background:linear-gradient(180deg,rgba(255,255,255,.8) 0%,rgba(245,249,255,.92) 100%);
+    -webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%)}
+}
 .hm-stats-shell:before{content:"";position:absolute;left:34px;right:34px;top:-1px;height:3px;border-radius:0 0 4px 4px;
   background:linear-gradient(90deg,var(--brand),var(--brand2) 55%,var(--brand3))}
 .hm-stats-head{display:flex;align-items:center;justify-content:center;gap:7px;padding:2px 0 10px;
@@ -131,7 +135,7 @@ a{text-decoration:none}
 .hm-stat-card{position:relative;display:flex;align-items:center;gap:13px;border-radius:14px;padding:14px 14px;
   transition:background .18s,box-shadow .18s}
 .hm-stat-card+.hm-stat-card:before{content:"";position:absolute;left:0;top:20%;bottom:20%;width:1px;background:var(--line)}
-.hm-stat-card:hover{background:#fff;box-shadow:0 16px 30px -24px rgba(11,61,145,.6)}
+.hm-stat-card:hover{background:rgba(255,255,255,.85);box-shadow:0 16px 30px -24px rgba(11,61,145,.35)}
 .hm-stat-card .ic{width:44px;height:44px;border-radius:13px;flex:0 0 auto;color:var(--brand);
   background:linear-gradient(135deg,#e9f1ff,#f6faff);display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem}
 .hm-stat-card .ic.green{color:#0f7d50;background:linear-gradient(135deg,#e3f8ee,#f3fbf7)}
@@ -208,13 +212,13 @@ a{text-decoration:none}
 .hm-foot a{color:rgba(255,255,255,.9);font-weight:600}
 .hm-foot a:hover{color:#fff}
 @media (max-width:991px){
-  .hm-stats-shell{max-width:680px;margin-top:-32px;padding:12px 10px 10px}
+  .hm-stats-shell{max-width:680px;margin-top:-48px;padding:12px 10px 10px}
   .hm-stat-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .hm-stat-card{border:1px solid var(--line);background:#fff}
   .hm-stat-card+.hm-stat-card:before{display:none}
 }
 @media (max-width:479px){
-  .hm-stats-shell{max-width:100%;margin-top:-24px;border-radius:18px}
+  .hm-stats-shell{max-width:100%;margin-top:-36px;border-radius:18px}
   .hm-stat-cards{grid-template-columns:1fr}
   .hm-stat-card b{font-size:1.5rem}
 }
