@@ -231,6 +231,12 @@ function teaching_assignments_map($school_id) {
         $stream = trim((string)($r['stream'] ?? ''));
         $k = $cid . ':' . $sid . ':' . $stream;
         if (!isset($map[$k])) $map[$k] = $r;
+        // Ufunguo wa herufi ndogo: ratiba inaweza kutumia "a" wakati ugawaji
+        // uliwekwa kwa "A" (au kinyume chake).
+        if ($stream !== '') {
+            $lk = $cid . ':' . $sid . ':' . mb_strtolower($stream);
+            if (!isset($map[$lk])) $map[$lk] = $r;
+        }
         if ($stream === '') {
             $plain = $cid . ':' . $sid;
             if (!isset($map[$plain])) $map[$plain] = $r;
@@ -251,9 +257,17 @@ function teaching_can_manage($class_id, $subject_id) {
     return false;
 }
 
+/**
+ * Jina la mwalimu kwa ratiba: jina la mwisho + herufi ya kwanza ya jina la kwanza.
+ * Mf. "John Malyango" => "Malyango,J."
+ */
 function teaching_short_name($full) {
-    $p = preg_split('/\s+/', trim((string)$full));
-    return $p ? (string)end($p) : '';
+    $p = preg_split('/\s+/', trim((string)$full), -1, PREG_SPLIT_NO_EMPTY);
+    if (!$p) return '';
+    $surname = (string)end($p);
+    if (count($p) === 1) return $surname;
+    $initial = mb_strtoupper(mb_substr((string)$p[0], 0, 1));
+    return $surname . ',' . $initial . '.';
 }
 
 /**

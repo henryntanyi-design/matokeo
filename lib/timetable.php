@@ -69,15 +69,27 @@ function tt_entity_name($class_name, $stream) {
     return $stream === '' ? $class_name : trim($class_name . ' ' . $stream);
 }
 
-/** Mwalimu kutoka ramani ya ugawaji: stream maalum kwanza, kisha darasa zima. */
+/**
+ * Mwalimu kutoka ramani ya ugawaji: stream maalum kwanza, kisha ule wa
+ * darasa zima (stream tupu). Mwalimu aliyepangiwa darasa zima hufundisha
+ * stream zote za darasa hilo, hivyo ratiba yenye streams haimwonyeshi kama
+ * "No teacher".
+ */
 function tt_assignment_for(array $map, $class_id, $subject_id, $stream = '') {
     $cid = (int)$class_id;
     $sid = (int)$subject_id;
     $stream = trim((string)$stream);
-    $k = $cid . ':' . $sid . ':' . $stream;
+    $base = $cid . ':' . $sid;
+
+    $k = $base . ':' . $stream;
     if (isset($map[$k])) return $map[$k];
-    if ($stream === '' && isset($map[$cid . ':' . $sid])) return $map[$cid . ':' . $sid];
-    return null;
+    if ($stream !== '') {
+        $lk = $base . ':' . mb_strtolower($stream);
+        if (isset($map[$lk])) return $map[$lk];
+        // Fallback: ugawaji wa darasa zima.
+        if (isset($map[$base . ':'])) return $map[$base . ':'];
+    }
+    return $map[$base] ?? null;
 }
 
 function tt_groups() {
