@@ -70,6 +70,9 @@ if (is_post()) {
     // Mikondo ya kila darasa inaingizwa kwa mpangilio wa $labelPool (A, B, C...).
     $input = $_POST;
     $input['streams'] = $labelPool;
+    // Tumia maadili yaliyoonyeshwa kwenye fomu (defaults za kila stream
+    // zimekwisha kujazwa), si maadili ghafi ya POST pekee.
+    $input['required'] = $reqValues;
     $check = tt_validate_input($input, $school_id);
     $data = $check['data'];
     $errors = $check['errors'];
