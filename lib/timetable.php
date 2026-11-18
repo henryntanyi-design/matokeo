@@ -86,10 +86,14 @@ function tt_assignment_for(array $map, $class_id, $subject_id, $stream = '') {
     if ($stream !== '') {
         $lk = $base . ':' . mb_strtolower($stream);
         if (isset($map[$lk])) return $map[$lk];
-        // Fallback: ugawaji wa darasa zima.
-        if (isset($map[$base . ':'])) return $map[$base . ':'];
+        // Hakuna fallback kwa darasa zima: kama mwalimu hajaassigniwa
+        // kwa mkondo huu mahususi, vipindi vya mkondo huu vikae tupu.
     }
-    return $map[$base] ?? null;
+    // Darasa zima (hakuna mkondo): tumia ugawaji wa darasa zima.
+    if ($stream === '') {
+        return $map[$base . ':'] ?? ($map[$base] ?? null);
+    }
+    return null;
 }
 
 function tt_groups() {
