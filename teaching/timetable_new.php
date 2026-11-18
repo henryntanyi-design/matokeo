@@ -149,7 +149,14 @@ if ($isPost) {
     foreach (($_POST['required'] ?? []) as $cid => $subs) {
         if (!is_array($subs) || !isset($classMap[(int)$cid])) continue;
         foreach ($subs as $sid => $byStream) {
-            if (!is_array($byStream)) $byStream = [0 => $byStream];
+            $streamIdx = array_keys($classStreams[(int)$cid] ?? ['']);
+            if (!is_array($byStream)) {
+                // Namba moja hutumika kwa mikondo yote ya darasa hilo.
+                foreach ($streamIdx as $si) {
+                    $reqValues[(int)$cid][(int)$sid][(int)$si] = max(0, (int)$byStream);
+                }
+                continue;
+            }
             foreach ($byStream as $si => $n) {
                 $si = (int)$si;
                 if (!isset($classStreams[(int)$cid][$si])) continue;
@@ -460,35 +467,48 @@ teaching_nav('timetable');
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead>
-            <tr><th style="width:50px">S/N</th><th>Class</th><th>Subject</th><th>Teacher</th><th style="width:120px">Periods</th></tr>
+            <tr><th style="width:50px">S/N</th><th>Class</th><th>Subject</th><th>Teacher</th><th style="width:120px">Periods (each stream)</th></tr>
           </thead>
           <tbody>
-            <?php $sn = 0; foreach ($classMap as $cid => $c): ?>
+            <?php $sn = 0; foreach ($classMap as $cid => $c): $cid = (int)$cid; ?>
               <?php $subs = $classSubjects[$cid] ?? []; if (!$subs) continue; ?>
-              <?php foreach ($classStreams[(int)$cid] ?? [''] as $si => $stream): $label = tt_entity_name((string)$c['name'], (string)$stream); $tkey = (int)$cid . '|' . (int)$si; ?>
-                <tr class="table-light">
-                  <td colspan="4" class="fw-bold"><?php echo h($label); ?></td>
-                  <td class="fw-bold text-center">
-                    <span data-class-total="<?php echo h($tkey); ?>">0</span> / <?php echo (int)$capacity; ?>
+              <?php $streamsOfClass = $classStreams[$cid] ?? ['']; $tkey = $cid . '|'; ?>
+              <tr class="table-light">
+                <td colspan="4" class="fw-bold">
+                  <?php echo h($c['name']); ?>
+                  <?php if (count($streamsOfClass) > 1): ?>
+                    <span class="text-muted small fw-normal">&mdash; every stream: <?php echo h(implode(', ', $streamsOfClass)); ?></span>
+                  <?php endif; ?>
+                </td>
+                <td class="fw-bold text-center">
+                  <span data-class-total="<?php echo h($tkey); ?>">0</span> / <?php echo (int)$capacity; ?>
+                </td>
+              </tr>
+              <?php foreach ($subs as $s): $sn++; $sid = (int)$s['id']; $val = (int)($reqValues[$cid][$sid][0] ?? 0); $names = []; $missing = false; ?>
+                <?php foreach ($streamsOfClass as $stream): $assigned = tt_assignment_for($assignMap, $cid, $sid, (string)$stream);
+                      if ($assigned) $names[(string)$assigned['full_name']] = true; else $missing = true; endforeach; ?>
+                <tr>
+                  <td class="text-muted"><?php echo $sn; ?></td>
+                  <td><?php echo h($c['name']); ?></td>
+                  <td><?php echo h($s['name']); ?><?php echo trim((string)($s['abbr'] ?? '')) !== '' ? ' <span class="text-muted small">(' . h($s['abbr']) . ')</span>' : ''; ?></td>
+                  <td class="small">
+                    <?php if (!$names): ?>
+                      <span class="badge text-bg-warning">No teacher</span>
+                    <?php else: ?>
+                      <?php echo h(implode(' &middot; ', array_keys($names))); ?>
+                      <?php if ($missing): ?> <span class="badge text-bg-warning">No teacher</span><?php endif; ?>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <input type="number" name="required[<?php echo $cid; ?>][<?php echo $sid; ?>]" class="form-control form-control-sm tt-req-input" data-class="<?php echo h($tkey); ?>" min="0" max="100" value="<?php echo $val; ?>">
                   </td>
                 </tr>
-                <?php foreach ($subs as $s): $sn++; $sid = (int)$s['id']; $val = (int)($reqValues[$cid][$sid][$si] ?? 0); $assigned = tt_assignment_for($assignMap, $cid, $sid, (string)$stream); ?>
-                  <tr>
-                    <td class="text-muted"><?php echo $sn; ?></td>
-                    <td><?php echo h($label); ?></td>
-                    <td><?php echo h($s['name']); ?><?php echo trim((string)($s['abbr'] ?? '')) !== '' ? ' <span class="text-muted small">(' . h($s['abbr']) . ')</span>' : ''; ?></td>
-                    <td class="small"><?php echo $assigned ? h($assigned['full_name']) : '<span class="badge text-bg-warning">No teacher</span>'; ?></td>
-                    <td>
-                      <input type="number" name="required[<?php echo (int)$cid; ?>][<?php echo $sid; ?>][<?php echo (int)$si; ?>]" class="form-control form-control-sm tt-req-input" data-class="<?php echo h($tkey); ?>" min="0" max="100" value="<?php echo $val; ?>">
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
               <?php endforeach; ?>
             <?php endforeach; ?>
           </tbody>
         </table>
       </div>
-      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). The total periods for each class must not exceed the available slots. You can set 0 for a subject you do not want on the timetable.</div>
+      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). One number applies to every stream of that class: if you enter 5 for Mathematics, stream A and stream B each get 5 periods. The total for each class must not exceed the available slots; set 0 for a subject you do not want.</div>
     </div>
   </div>
 
