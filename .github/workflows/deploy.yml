@@ -3,6 +3,7 @@ name: Deploy to Namecheap
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -11,13 +12,31 @@ jobs:
       - name: Pakua code
         uses: actions/checkout@v4
 
+      - name: Angalia FTP credentials
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USER: ${{ secrets.FTP_USER || secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASS || secrets.FTP_PASSWORD }}
+        run: |
+          missing=0
+          [ -z "$FTP_SERVER" ] && { echo "::error::Missing secret FTP_SERVER"; missing=1; }
+          [ -z "$FTP_USER" ] && { echo "::error::Missing secret FTP_USER (or FTP_USERNAME)"; missing=1; }
+          [ -z "$FTP_PASS" ] && { echo "::error::Missing secret FTP_PASS (or FTP_PASSWORD)"; missing=1; }
+          [ "$missing" -ne 0 ] && exit 1
+
+      - name: Andaa deploy-check.txt
+        run: |
+          printf 'sha=%s\n' "${GITHUB_SHA}" > deploy-check.txt
+          printf 'time=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> deploy-check.txt
+          printf 'server-dir=%s\n' "${{ vars.FTP_SERVER_DIR || secrets.FTP_SERVER_DIR || './public_html/' }}" >> deploy-check.txt
+
       - name: Pakia kwa FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
+          username: ${{ secrets.FTP_USER || secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASS || secrets.FTP_PASSWORD }}
+          server-dir: ${{ vars.FTP_SERVER_DIR || secrets.FTP_SERVER_DIR || './public_html/' }}
           exclude: |
             **/.git*
             **/.git*/**
@@ -26,3 +45,5 @@ jobs:
             .env
             database/**
             README.md
+          additional-files: |
+            deploy-check.txt
