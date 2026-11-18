@@ -33,7 +33,7 @@ function tta_time_in($v, $default) {
 }
 
 $streamsOverride = tta_int_in($src['streams'] ?? 0, 0, TTA_MAX_STREAMS, 0);
-$sessions = tta_int_in($src['sessions_per_day'] ?? 11, 1, 14, 11);
+$sessions = tta_int_in($src['sessions_per_day'] ?? 12, 1, 14, 12);
 $duration = tta_int_in($src['session_duration'] ?? 40, 15, 120, 40);
 $startTime = tta_time_in($src['start_time'] ?? '08:00', '08:00');
 $endTime = tta_time_in($src['end_time'] ?? '16:30', '16:30');
@@ -49,8 +49,8 @@ $breaks = tt_normalize_breaks([
     ['name' => 'LUNCH BREAK', 'start' => $lunchStart, 'end' => $lunchEnd],
 ]);
 $slots = teaching_timetable_timeslots($sessions, $duration, $startTime, $breaks);
-// Vipindi vya lazima pekee: baada ya lunch ni saa za remedial.
-$capacity = tt_compulsory_capacity(['days' => $days, 'slots' => $slots, 'breaks' => $breaks, 'events' => []]);
+// Vipindi vyote vya wiki: siku 5 × vipindi 12 = 60 nafasi.
+$capacity = tt_capacity(['days' => $days, 'slots' => $slots, 'breaks' => $breaks, 'events' => []]);
 $morningSlots = 0;
 $lunchCut = teaching_time_minutes($lunchStart);
 foreach ($slots['items'] as $it) {

@@ -195,17 +195,11 @@ function tta_week_requirements(array $class, $capacity, array $labels, array $da
  */
 function tta_attempt(array $data, array $assignMap, array $need, array $subjectInfo, $maxPerDay, $morningCutoff) {
     $days = $data['days'];
-    // Vipindi vya remedial hupangwa baada ya lunch, hivyo hapa tunatumia
-    // vipindi vya lazima pekee.
-    $remedialNos = tt_remedial_nos([
-        'days' => $days,
-        'slots' => $data['slots'],
-        'breaks' => $data['breaks'] ?? [],
-    ]);
+    // Vipindi vyote vya siku, pamoja na vya baada ya lunch: nafasi zote
+    // zinatumika kwa masomo ya lazima, remedial hujaza kilichobaki.
     $sessionItems = [];
     foreach (($data['slots']['items'] ?? []) as $it) {
         if (($it['type'] ?? '') !== 'session') continue;
-        if (isset($remedialNos[(int)$it['no']])) continue;
         $sessionItems[] = $it;
     }
 
@@ -416,13 +410,17 @@ function tta_attempt(array $data, array $assignMap, array $need, array $subjectI
     $required = 0;
     foreach ($need as $ent) foreach ($ent['subjects'] as $n) $required += (int)$n;
 
-    // Vipindi vya remedial: baada ya lunch, mchanganyiko wa science na art.
+    // Vipindi vya remedial: hujaza nafasi zilizobaki tu, mchanganyiko wa science na art.
+    $occupied = [];
+    foreach ($entries as $e) {
+        $occupied[$e['day']][(int)$e['period_no']][(int)$e['class_id'] . '|' . (string)$e['stream']] = true;
+    }
     $entries = array_merge($entries, tt_plan_remedial([
         'days' => $days,
         'slots' => $data['slots'],
         'breaks' => $data['breaks'] ?? [],
         'events' => $data['events'] ?? [],
-    ], $need, $assignMap, $subjectInfo, $busy));
+    ], $need, $assignMap, $subjectInfo, $busy, $occupied));
 
     return [
         'entries' => $entries,

@@ -298,21 +298,6 @@ function tt_remedial_nos(array $config) {
     return $nos;
 }
 
-/** Idadi ya nafasi za vipindi vya lazima (bila remedial na bila matukio). */
-function tt_compulsory_capacity(array $config) {
-    $nos = tt_remedial_nos($config);
-    if (!$nos) return tt_capacity($config);
-
-    $filtered = $config;
-    $items = [];
-    foreach (($config['slots']['items'] ?? []) as $it) {
-        if (($it['type'] ?? '') === 'session' && isset($nos[(int)$it['no']])) continue;
-        $items[] = $it;
-    }
-    $filtered['slots']['items'] = $items;
-    return tt_capacity($filtered);
-}
-
 /**
  * Mgawanyo wa vipindi vya lazima kwa siku za wiki.
  *
@@ -391,7 +376,7 @@ function tt_subject_family($name, $abbr = '') {
  * @param array $busy       [day][period][teacher_id] => true (vipindi vya lazima)
  * @return array entries
  */
-function tt_plan_remedial(array $config, array $need, array $assignMap, array $subjectInfo, array $busy = []) {
+function tt_plan_remedial(array $config, array $need, array $assignMap, array $subjectInfo, array $busy = [], array $occupied = []) {
     $nos = tt_remedial_nos($config);
     if (!$nos || !$need) return [];
 
@@ -436,6 +421,8 @@ function tt_plan_remedial(array $config, array $need, array $assignMap, array $s
                     }
                 }
                 if ($covered) continue;
+                // Kipindi kilichokwisha chukuliwa na somo la lazima.
+                if (!empty($occupied[$day][$no][$cid . '|' . $stream])) continue;
 
                 $order = ($k % 2 === 0) ? ['science', 'art'] : ['art', 'science'];
                 $pick = 0;
@@ -1036,8 +1023,8 @@ function tt_validate_input(array $in, $school_id) {
         $errors[] = 'Set at least one period for each class and subject.';
     }
 
-    // Vipindi vya lazima pekee: baada ya lunch ni saa za remedial.
-    $capacity = tt_compulsory_capacity([
+    // Vipindi vyote vya wiki (pamoja na vya baada ya lunch), bila matukio.
+    $capacity = tt_capacity([
         'days' => $days,
         'slots' => $slots,
         'breaks' => $breaks,
@@ -1124,17 +1111,11 @@ function tt_generate(array $data, array $assignMap = []) {
         }
     }
 
-    // Nafasi za vipindi vya lazima kwa kila siku (bila saa za matukio wala
-    // vipindi vya remedial, ambavyo hupangwa baadaye).
-    $remedialNos = tt_remedial_nos([
-        'days' => $data['days'],
-        'slots' => $data['slots'],
-        'breaks' => $data['breaks'] ?? [],
-    ]);
+    // Nafasi zote za vipindi kwa kila siku (bila saa za matukio): vipindi vya
+    // baada ya lunch ni vipindi vya kawaida, vinavyohesabiwa kwenye nafasi.
     $sessionItems = [];
     foreach (($data['slots']['items'] ?? []) as $it) {
         if (($it['type'] ?? '') !== 'session') continue;
-        if (isset($remedialNos[(int)$it['no']])) continue;
         $sessionItems[] = $it;
     }
     $daySlots = [];
@@ -1406,15 +1387,17 @@ function tt_generate(array $data, array $assignMap = []) {
     // Vipindi vya remedial: hujazwa baada ya lunch kwa mchanganyiko wa science
     // na art, hadi kila somo lipate zamu.
     $busy = [];
+    $occupied = [];
     foreach ($best['entries'] as $e) {
         if (!empty($e['teacher_id'])) $busy[$e['day']][(int)$e['period_no']][(int)$e['teacher_id']] = true;
+        $occupied[$e['day']][(int)$e['period_no']][(int)$e['class_id'] . '|' . (string)$e['stream']] = true;
     }
     $remedial = tt_plan_remedial([
         'days' => $data['days'],
         'slots' => $data['slots'],
         'breaks' => $data['breaks'] ?? [],
         'events' => $data['events'] ?? [],
-    ], $needByEntity, $assignMap, $subjectInfo, $busy);
+    ], $needByEntity, $assignMap, $subjectInfo, $busy, $occupied);
 
     return [
         'ok' => true,
@@ -1447,7 +1430,6 @@ function tt_build_matrix(array $tt, array $classes, array $opts = []) {
     // Saa za vipindi
     $cols = [];
     $breakKeys = [];
-    $remedialNos = tt_remedial_nos($config);
     foreach (($slots['items'] ?? []) as $it) {
         if (($it['type'] ?? '') === 'break') {
             $k = (int)$it['start'] . '-' . (int)$it['end'];
@@ -1464,7 +1446,6 @@ function tt_build_matrix(array $tt, array $classes, array $opts = []) {
                 'start' => (int)$it['start'], 'end' => (int)$it['end'],
                 'start_text' => $it['start_text'], 'end_text' => $it['end_text'],
                 'label' => (string)$it['label'], 'by_day' => [],
-                'remedial' => isset($remedialNos[(int)$it['no']]),
             ];
         }
     }
@@ -1699,7 +1680,6 @@ function tt_build_matrix(array $tt, array $classes, array $opts = []) {
         'events' => $config['events'],
         'slots' => $slots,
         'config' => $config,
-        'remedial_nos' => $remedialNos,
     ];
 }
 

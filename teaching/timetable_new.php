@@ -109,7 +109,7 @@ if (is_post()) {
 
 /* ---------------- Form values ---------------- */
 
-$fSessions = $isPost ? (int)($_POST['sessions_per_day'] ?? 11) : 11;
+$fSessions = $isPost ? (int)($_POST['sessions_per_day'] ?? 12) : 12;
 $fSessions = max(1, min(14, $fSessions));
 $fDuration = $isPost ? (int)($_POST['session_duration'] ?? 40) : 40;
 $fDuration = max(15, min(120, $fDuration));
@@ -129,8 +129,8 @@ $days = tt_days($fSat, $fSun);
 $cfgBreaks = tt_normalize_breaks($rawBreaks);
 $cfgEvents = tt_normalize_events($rawEvents, $days);
 $slots = teaching_timetable_timeslots($fSessions, $fDuration, $fStart, $cfgBreaks);
-// Vipindi vya lazima pekee (kabla ya lunch); baada ya lunch ni remedial.
-$capacity = tt_compulsory_capacity(['days' => $days, 'slots' => $slots, 'breaks' => $cfgBreaks, 'events' => $cfgEvents]);
+// Vipindi vyote vya wiki: siku 5 × vipindi 12 = 60 nafasi (bila matukio).
+$capacity = tt_capacity(['days' => $days, 'slots' => $slots, 'breaks' => $cfgBreaks, 'events' => $cfgEvents]);
 $remedialSlots = count(tt_remedial_nos(['days' => $days, 'slots' => $slots, 'breaks' => $cfgBreaks]));
 
 /* Requirements: values submitted by POST, otherwise defaults (kwa kila stream). */
@@ -304,10 +304,10 @@ teaching_nav('timetable');
       <?php endif; ?>
     </form>
     <div class="small text-muted mt-2">
-      The selected group has <b><?php echo count($classMap); ?></b> class(es). Compulsory period slots per week for each class:
-      <b><?php echo (int)$capacity; ?></b> (days <?php echo count($days); ?> &times; sessions <?php echo (int)$fSessions; ?>).
+      The selected group has <b><?php echo count($classMap); ?></b> class(es). Period slots per week for each stream:
+      <b><?php echo (int)$capacity; ?></b> (days <?php echo count($days); ?> &times; sessions <?php echo (int)$fSessions; ?>, excluding event times).
       <?php if ($remedialSlots > 0): ?>
-        Sessions after lunch are <b>remedial</b> (<?php echo (int)$remedialSlots; ?> per day) and are filled with a science/art mix.
+        Any session left free after the required periods are placed is filled with a <b>remedial</b> science/art mix.
       <?php endif; ?>
     </div>
   </div>
@@ -382,7 +382,7 @@ teaching_nav('timetable');
       </div>
       <div class="alert alert-light border mt-3 mb-0 small">
         Session times: <b><?php echo h($slots['start_text']); ?> - <?php echo h($slots['end_text']); ?></b>.
-        Each class has <b><?php echo (int)$capacity; ?></b> period slots per week (excluding event times).
+        Each stream has <b><?php echo (int)$capacity; ?></b> period slots per week (excluding event times).
       </div>
     </div>
   </div>
