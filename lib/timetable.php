@@ -1821,11 +1821,7 @@ function tt_render_table(array $matrix, $forPdf = false, $paper = 'A4') {
         $ri = 0;
         foreach ($dayRow['classes'] as $classRow) {
             $out .= '<tr>';
-            if ($pdf) {
-                // PDF: siku inaonyeshwa kwenye kila safu ili pagination
-                // isiharibu mpangilio wa safu ya Day na Form.
-                $out .= '<td class="tt-day">' . h($dayRow['label']) . '</td>';
-            } elseif ($ri === 0) {
+            if ($ri === 0) {
                 $out .= '<td rowspan="' . $span . '" class="tt-day">' . h($dayRow['label']) . '</td>';
             }
             $out .= '<td class="tt-form">' . h($classRow['label'] ?? $classRow['class']['name']) . '</td>';
@@ -1895,15 +1891,39 @@ function tt_render_table(array $matrix, $forPdf = false, $paper = 'A4') {
     };
 
     if ($forPdf) {
-        /* PDF: jedwali moja linaloendelea bila kuvunja kurasa kwa nguvu.
-           Siku zinafuatana kwenye ukurasa mmoja; kama maudhui yakizidi
-           ukurasa, yanaendelea kwenye ukurasa wa chini (pagination ya
-           Dompdf). Kichwa (thead) hurudiwa juu ya kila ukurasa. */
-        $html = '<div class="tt-page"><table class="tt-table tt-pdf">' . $colgroup . $renderHead();
+        /* PDF: siku zinabaki kama kundi (merged Day column). Ili Day
+           isijitenge na Form kwenye pagination, vunja kurasa kati ya siku
+           (si katikati ya siku): siku inayoshuka inaenda kwenye ukurasa
+           wa chini ikiwa na siku yake. */
+        $pageHeight = $paper === 'A3' ? 841.89 : 595.28;
+        $usable = $pageHeight - 34.0 - 22.0 - 26.0;
+        $rowsPerPage = max(4, (int)floor($usable / 38.0));
+
+        $chunks = [];
+        $current = [];
+        $used = 0;
         foreach ($matrix['rows'] as $dayRow) {
-            $html .= '<tbody class="tt-day-group">' . $renderDay($dayRow, 'pdf') . '</tbody>';
+            $rows = max(1, count($dayRow['classes']));
+            if ($current && $used + $rows > $rowsPerPage) {
+                $chunks[] = $current;
+                $current = [];
+                $used = 0;
+            }
+            $current[] = $dayRow;
+            $used += $rows;
         }
-        $html .= '</table></div>';
+        if ($current) $chunks[] = $current;
+
+        $html = '';
+        $lastChunk = count($chunks) - 1;
+        foreach ($chunks as $i => $chunk) {
+            $html .= '<div class="tt-page' . ($i < $lastChunk ? ' tt-page-break' : '') . '">'
+                   . '<table class="tt-table tt-pdf">' . $colgroup . $renderHead();
+            foreach ($chunk as $dayRow) {
+                $html .= '<tbody class="tt-day-group">' . $renderDay($dayRow, 'pdf') . '</tbody>';
+            }
+            $html .= '</table></div>';
+        }
         return $html;
     }
 
