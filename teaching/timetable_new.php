@@ -65,48 +65,6 @@ $defaultEvents = [
 $errors = [];
 $savedId = 0;
 
-if (is_post()) {
-    csrf_check();
-    // Mikondo ya kila darasa inaingizwa kwa mpangilio wa $labelPool (A, B, C...).
-    $input = $_POST;
-    $input['streams'] = $labelPool;
-    // Tumia maadili yaliyoonyeshwa kwenye fomu (defaults za kila stream
-    // zimekwisha kujazwa), si maadili ghafi ya POST pekee.
-    $input['required'] = $reqValues;
-    $check = tt_validate_input($input, $school_id);
-    $data = $check['data'];
-    $errors = $check['errors'];
-
-    if (!$errors) {
-        $assignMap = teaching_assignments_map($school_id);
-        $weekSlots = (int)($data['capacity'] ?? 0);
-
-        // Mgongano wa kudumu: mwalimu anahitajika vipindi vingi kuliko nafasi za wiki.
-        foreach (tt_teacher_load($data['requirements'], $assignMap, $weekSlots) as $t) {
-            $errors[] = 'Teacher ' . $t['name'] . ' is required for ' . $t['periods']
-                . ' periods a week but only ' . $weekSlots . ' slots exist. Reduce that teacher\'s periods, add sessions per day, or include Saturday.';
-        }
-
-        if (!$errors) {
-            $result = tt_generate($data, $assignMap);
-            if (!$result['ok']) {
-                $errors = array_merge($errors, $result['errors']);
-            } else {
-                try {
-                    $savedId = tt_save($school_id, (int)$year['id'], $data, $data['requirements'], $result['entries'], (int)($me['id'] ?? 0));
-                    $clash = tt_clash_report($result['entries']);
-                    flash('success', 'The timetable was generated successfully (' . count($result['entries']) . ' periods, '
-                        . (int)$clash['teacher'] . ' teacher clashes, ' . (int)$clash['stream'] . ' class clashes).'
-                        . ' Click <b>Publish</b> so that teachers and students see it as the official timetable.');
-                    redirect('teaching/timetable.php?id=' . $savedId);
-                } catch (Exception $e) {
-                    $errors[] = 'Could not save the timetable: ' . $e->getMessage();
-                }
-            }
-        }
-    }
-}
-
 /* ---------------- Form values ---------------- */
 
 $fSessions = $isPost ? (int)($_POST['sessions_per_day'] ?? 12) : 12;
@@ -161,6 +119,50 @@ if ($isPost) {
                 $si = (int)$si;
                 if (!isset($classStreams[(int)$cid][$si])) continue;
                 $reqValues[(int)$cid][(int)$sid][$si] = max(0, (int)$n);
+            }
+        }
+    }
+}
+
+/* ---------------- Uzalishaji ---------------- */
+
+if (is_post()) {
+    csrf_check();
+    // Mikondo ya kila darasa inaingizwa kwa mpangilio wa $labelPool (A, B, C...).
+    $input = $_POST;
+    $input['streams'] = $labelPool;
+    // Tumia maadili yaliyoonyeshwa kwenye fomu (defaults za kila stream
+    // zimekwisha kujazwa), si maadili ghafi ya POST pekee.
+    $input['required'] = $reqValues;
+    $check = tt_validate_input($input, $school_id);
+    $data = $check['data'];
+    $errors = $check['errors'];
+
+    if (!$errors) {
+        $genAssign = teaching_assignments_map($school_id);
+        $weekSlots = (int)($data['capacity'] ?? 0);
+
+        // Mgongano wa kudumu: mwalimu anahitajika vipindi vingi kuliko nafasi za wiki.
+        foreach (tt_teacher_load($data['requirements'], $genAssign, $weekSlots) as $t) {
+            $errors[] = 'Teacher ' . $t['name'] . ' is required for ' . $t['periods']
+                . ' periods a week but only ' . $weekSlots . ' slots exist. Reduce that teacher\'s periods, add sessions per day, or include Saturday.';
+        }
+
+        if (!$errors) {
+            $result = tt_generate($data, $genAssign);
+            if (!$result['ok']) {
+                $errors = array_merge($errors, $result['errors']);
+            } else {
+                try {
+                    $savedId = tt_save($school_id, (int)$year['id'], $data, $data['requirements'], $result['entries'], (int)($me['id'] ?? 0));
+                    $clash = tt_clash_report($result['entries']);
+                    flash('success', 'The timetable was generated successfully (' . count($result['entries']) . ' periods, '
+                        . (int)$clash['teacher'] . ' teacher clashes, ' . (int)$clash['stream'] . ' class clashes).'
+                        . ' Click <b>Publish</b> so that teachers and students see it as the official timetable.');
+                    redirect('teaching/timetable.php?id=' . $savedId);
+                } catch (Exception $e) {
+                    $errors[] = 'Could not save the timetable: ' . $e->getMessage();
+                }
             }
         }
     }
