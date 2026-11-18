@@ -117,15 +117,29 @@ a{text-decoration:none}
 .hm-hero-card .mini{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.15)}
 .hm-hero-card .mini:last-child{border-bottom:0}
 .hm-hero-card .mini b{font-size:1.45rem;line-height:1}
-.hm-strip{background:#fff;border-bottom:1px solid var(--line);padding:20px 0}
-.hm-stat-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.hm-stat-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:16px;
-  padding:18px;box-shadow:0 16px 34px -32px rgba(11,61,145,.6);transition:transform .18s,box-shadow .18s,border-color .18s}
-.hm-stat-card:hover{transform:translateY(-2px);border-color:#b9cdf0;box-shadow:0 20px 38px -28px rgba(11,61,145,.55)}
-.hm-stat-card .ic{width:46px;height:46px;border-radius:13px;background:#edf3ff;color:var(--brand);
-  display:inline-flex;align-items:center;justify-content:center;font-size:1.15rem;flex:0 0 auto}
-.hm-stat-card b{display:block;font-size:1.5rem;line-height:1.05;color:var(--brand);font-weight:800}
-.hm-stat-card span{display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+/* Kadi za takwimu: panel nyembamba iliyokaa katikati, inayogusa hero kidogo. */
+.hm-strip{background:transparent;border-bottom:0;padding:0 0 4px}
+.hm-stats-shell{max-width:940px;margin:-44px auto 0;position:relative;z-index:2;padding:14px 12px 12px;
+  background:linear-gradient(180deg,#ffffff 0%,#f7faff 100%);border:1px solid var(--line);border-radius:22px;
+  box-shadow:0 30px 60px -34px rgba(11,61,145,.55),0 4px 16px -10px rgba(11,61,145,.18)}
+.hm-stats-shell:before{content:"";position:absolute;left:34px;right:34px;top:-1px;height:3px;border-radius:0 0 4px 4px;
+  background:linear-gradient(90deg,var(--brand),var(--brand2) 55%,var(--brand3))}
+.hm-stats-head{display:flex;align-items:center;justify-content:center;gap:7px;padding:2px 0 10px;
+  font-size:.64rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--mut)}
+.hm-stats-head i{color:var(--brand2);font-size:.78rem}
+.hm-stat-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.hm-stat-card{position:relative;display:flex;align-items:center;gap:13px;border-radius:14px;padding:14px 14px;
+  transition:background .18s,box-shadow .18s}
+.hm-stat-card+.hm-stat-card:before{content:"";position:absolute;left:0;top:20%;bottom:20%;width:1px;background:var(--line)}
+.hm-stat-card:hover{background:#fff;box-shadow:0 16px 30px -24px rgba(11,61,145,.6)}
+.hm-stat-card .ic{width:44px;height:44px;border-radius:13px;flex:0 0 auto;color:var(--brand);
+  background:linear-gradient(135deg,#e9f1ff,#f6faff);display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem}
+.hm-stat-card .ic.green{color:#0f7d50;background:linear-gradient(135deg,#e3f8ee,#f3fbf7)}
+.hm-stat-card .ic.amber{color:#9a5b00;background:linear-gradient(135deg,#fff3e2,#fff9f1)}
+.hm-stat-card .ic.violet{color:#5b2bb8;background:linear-gradient(135deg,#f0eaff,#f9f6ff)}
+.hm-stat-card b{display:block;font-size:1.65rem;line-height:1.05;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(135deg,#0b3d91,#2c6ed5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hm-stat-card span{display:block;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
 .hm-latest{padding:26px 0 6px}
 .hm-latest-title{font-size:.95rem;font-weight:800;color:var(--ink);margin:0}
 .hm-latest-all{font-size:.8rem;font-weight:700;color:var(--brand2)}
@@ -193,8 +207,17 @@ a{text-decoration:none}
 .hm-foot{background:#0a2f70;color:rgba(255,255,255,.72);font-size:.8rem;padding:26px 0}
 .hm-foot a{color:rgba(255,255,255,.9);font-weight:600}
 .hm-foot a:hover{color:#fff}
-@media (max-width:991px){.hm-stat-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:479px){.hm-stat-cards{grid-template-columns:1fr}}
+@media (max-width:991px){
+  .hm-stats-shell{max-width:680px;margin-top:-32px;padding:12px 10px 10px}
+  .hm-stat-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .hm-stat-card{border:1px solid var(--line);background:#fff}
+  .hm-stat-card+.hm-stat-card:before{display:none}
+}
+@media (max-width:479px){
+  .hm-stats-shell{max-width:100%;margin-top:-24px;border-radius:18px}
+  .hm-stat-cards{grid-template-columns:1fr}
+  .hm-stat-card b{font-size:1.5rem}
+}
 @media (max-width:767px){
   .hm-hero{padding:56px 0 64px}
   .hm-section{padding:52px 0}
@@ -259,11 +282,14 @@ a{text-decoration:none}
 
 <section class="hm-strip" aria-label="System statistics">
   <div class="container">
-    <div class="hm-stat-cards">
-      <div class="hm-stat-card"><span class="ic"><i class="bi bi-person-badge"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statStaff; ?>"><?php echo (int)$statStaff; ?></b><span>Registered staff</span></div></div>
-      <div class="hm-stat-card"><span class="ic"><i class="bi bi-buildings"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statSchoolsAll; ?>"><?php echo (int)$statSchoolsAll; ?></b><span>Registered schools</span></div></div>
-      <div class="hm-stat-card"><span class="ic"><i class="bi bi-people-fill"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statStudents; ?>"><?php echo (int)$statStudents; ?></b><span>Registered students</span></div></div>
-      <div class="hm-stat-card"><span class="ic"><i class="bi bi-journal-check"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statPublished; ?>"><?php echo (int)$statPublished; ?></b><span>Published results</span></div></div>
+    <div class="hm-stats-shell">
+      <div class="hm-stats-head"><i class="bi bi-activity"></i>System at a glance</div>
+      <div class="hm-stat-cards">
+        <div class="hm-stat-card"><span class="ic"><i class="bi bi-person-badge"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statStaff; ?>"><?php echo (int)$statStaff; ?></b><span>Registered staff</span></div></div>
+        <div class="hm-stat-card"><span class="ic amber"><i class="bi bi-buildings"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statSchoolsAll; ?>"><?php echo (int)$statSchoolsAll; ?></b><span>Registered schools</span></div></div>
+        <div class="hm-stat-card"><span class="ic green"><i class="bi bi-people-fill"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statStudents; ?>"><?php echo (int)$statStudents; ?></b><span>Registered students</span></div></div>
+        <div class="hm-stat-card"><span class="ic violet"><i class="bi bi-journal-check"></i></span><div><b class="stat-num" data-count="<?php echo (int)$statPublished; ?>"><?php echo (int)$statPublished; ?></b><span>Published results</span></div></div>
+      </div>
     </div>
   </div>
 </section>
