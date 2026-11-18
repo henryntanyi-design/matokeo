@@ -116,6 +116,15 @@ $matrix = $tt
     ? tt_build_matrix($tt, $display_classes, ['subject_id' => $subject_id, 'teacher_id' => $teacher_id, 'stream' => $stream])
     : ['columns' => [], 'rows' => [], 'total_rows' => 0, 'stats' => [], 'filtered' => false];
 
+/* Muhtasari wa walimu na idadi ya vipindi (kwa ratiba nzima). */
+$teacherSummary = [];
+if ($tt) {
+    $teacherSummary = q_all('SELECT e.teacher_id, u.full_name, COUNT(*) AS periods
+        FROM timetable_entries e JOIN users u ON u.id = e.teacher_id
+        WHERE e.timetable_id = ? AND e.teacher_id IS NOT NULL
+        GROUP BY e.teacher_id, u.full_name ORDER BY u.full_name', [$id]);
+}
+
 /* ---------------- Names and metadata ---------------- */
 
 $teacherName = '';
@@ -361,6 +370,39 @@ teaching_nav('timetable');
   <?php echo tt_render_table($matrix); ?>
 
   <?php echo tt_render_footer(tt_academic_master_name()); ?>
+
+  <?php if ($teacherSummary): ?>
+    <div class="card shadow-sm mt-3 d-print-none">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-people"></i> Muhtasari wa walimu na idadi ya vipindi</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:50px">#</th>
+                <th>Mwalimu</th>
+                <th class="text-end" style="width:120px">Vipindi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php $tsn = 0; $tstotal = 0; foreach ($teacherSummary as $tr): $tsn++; $tstotal += (int)$tr['periods']; ?>
+                <tr>
+                  <td class="text-muted"><?php echo $tsn; ?></td>
+                  <td><?php echo h($tr['full_name']); ?></td>
+                  <td class="text-end fw-bold"><?php echo (int)$tr['periods']; ?></td>
+                </tr>
+              <?php endforeach; ?>
+              <tr class="table-light fw-bold">
+                <td></td>
+                <td>Jumla</td>
+                <td class="text-end"><?php echo $tstotal; ?></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
 
   <?php if ($matrix['stats']): ?>
     <div class="card shadow-sm mt-3 d-print-none">
