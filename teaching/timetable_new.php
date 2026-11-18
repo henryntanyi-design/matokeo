@@ -461,7 +461,7 @@ teaching_nav('timetable');
   <div class="card shadow-sm mb-3">
     <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
       <span>Required periods per week</span>
-      <span class="badge text-bg-light border">Slots per class: <?php echo (int)$capacity; ?></span>
+      <span class="badge text-bg-light border">Slots per stream: <?php echo (int)$capacity; ?></span>
     </div>
     <div class="card-body">
       <div class="table-responsive">
@@ -508,7 +508,7 @@ teaching_nav('timetable');
           </tbody>
         </table>
       </div>
-      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). One number applies to every stream of that class: if you enter 5 for Mathematics, stream A and stream B each get 5 periods. The total for each class must not exceed the available slots; set 0 for a subject you do not want.</div>
+      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). One number applies to every stream of that class: if you enter 5 for Mathematics, stream A and stream B each get 5 periods. The total for each stream must not exceed the available slots; set 0 for a subject you do not want.</div>
     </div>
   </div>
 
