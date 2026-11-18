@@ -266,44 +266,6 @@ teaching_nav('timetable');
       <div class="col-12 col-md-2 d-flex gap-2">
         <button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-arrow-repeat"></i> Apply</button>
       </div>
-      <?php if ($classMap): ?>
-        <div class="col-12">
-          <div class="table-responsive">
-            <table class="table table-sm align-middle mb-1">
-              <thead>
-                <tr>
-                  <th>Class</th>
-                  <th class="text-center">Students</th>
-                  <th style="width:170px">Streams (0 = from students)</th>
-                  <th>Building</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php foreach ($classMap as $cid => $c): $cid = (int)$cid; $p = $classPlans[$cid] ?? null; ?>
-                  <tr>
-                    <td class="fw-bold"><?php echo h($c['name']); ?></td>
-                    <td class="text-center"><?php echo (int)($p['total'] ?? 0); ?></td>
-                    <td>
-                      <input type="number" name="streams_class[<?php echo $cid; ?>]" class="form-control form-control-sm" min="0" max="<?php echo TTA_MAX_STREAMS; ?>" value="<?php echo (int)($classStreamCount[$cid] ?? 0); ?>">
-                    </td>
-                    <td class="small">
-                      <?php $lbl = $classStreams[$cid] ?? ['']; ?>
-                      <?php echo ($lbl === [''])
-                          ? '<span class="text-muted">Whole class</span>'
-                          : h(implode(', ', $lbl)); ?>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-          <div class="form-text">
-            0 = follow the streams already recorded for the students (whole class if none).
-            Set a number to decide the streams of that class yourself &mdash; each class can have a different number.
-            There is no maximum number of students per stream. Click <b>Apply</b> after changing the numbers so the period table below follows.
-          </div>
-        </div>
-      <?php endif; ?>
     </form>
     <div class="small text-muted mt-2">
       The selected group has <b><?php echo count($classMap); ?></b> class(es). Period slots per week for each stream:
@@ -323,9 +285,45 @@ teaching_nav('timetable');
   <?php echo csrf_field(); ?>
   <input type="hidden" name="year_id" value="<?php echo (int)$year['id']; ?>">
   <input type="hidden" name="group" value="<?php echo h($group); ?>">
-  <?php foreach ($classMap as $cid => $c): ?>
-    <input type="hidden" name="streams_class[<?php echo (int)$cid; ?>]" value="<?php echo (int)($classStreamCount[(int)$cid] ?? 0); ?>">
-  <?php endforeach; ?>
+  <div class="card shadow-sm mb-3">
+    <div class="card-header bg-white fw-bold">Streams per class</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-2">
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th class="text-center">Students</th>
+              <th style="width:170px">Streams (0 = from students)</th>
+              <th>Streams that will be used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($classMap as $cid => $c): $cid = (int)$cid; $p = $classPlans[$cid] ?? null; ?>
+              <tr>
+                <td class="fw-bold"><?php echo h($c['name']); ?></td>
+                <td class="text-center"><?php echo (int)($p['total'] ?? 0); ?></td>
+                <td>
+                  <input type="number" name="streams_class[<?php echo $cid; ?>]" class="form-control form-control-sm" min="0" max="<?php echo TTA_MAX_STREAMS; ?>" value="<?php echo (int)($classStreamCount[$cid] ?? 0); ?>">
+                </td>
+                <td class="small">
+                  <?php $lbl = $classStreams[$cid] ?? ['']; ?>
+                  <?php echo ($lbl === [''])
+                      ? '<span class="text-muted">Whole class (no stream)</span>'
+                      : h(implode(', ', $lbl)); ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <div class="form-text">
+        Set the number of streams for each class yourself &mdash; every class may differ, and there is no limit on students per stream.
+        0 follows the streams recorded on the students (whole class if none).
+        The numbers above apply as soon as you click <b>Create Timetable</b>: the period table below and the generated timetable use them.
+      </div>
+    </div>
+  </div>
 
   <div class="card shadow-sm mb-3">
     <div class="card-header bg-white fw-bold">Basic settings</div>
@@ -358,17 +356,6 @@ teaching_nav('timetable');
             Every stream gets its own timetable rows (for example: Form I A, Form I B).
           </div>
         </div>
-        <?php if ($classPlans): ?>
-          <div class="col-12">
-            <div class="alert alert-light border py-2 px-3 mb-0 small">
-              <i class="bi bi-diagram-3 text-primary"></i> Streams per class:
-              <?php foreach ($classMap as $cid => $c): $cid = (int)$cid; $lbl = $classStreams[$cid] ?? ['']; ?>
-                <span class="badge text-bg-light border ms-1"><?php echo h($c['name']); ?>:
-                  <?php echo ($lbl === ['']) ? 'whole class' : h(implode(', ', $lbl)); ?></span>
-              <?php endforeach; ?>
-            </div>
-          </div>
-        <?php endif; ?>
         <div class="col-6 col-lg-3">
           <div class="form-check mt-3">
             <input class="form-check-input" type="checkbox" name="include_saturday" id="includeSaturday" value="1"<?php echo $fSat ? ' checked' : ''; ?>>
@@ -510,7 +497,8 @@ teaching_nav('timetable');
           </tbody>
         </table>
       </div>
-      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). One number applies to every stream of that class: if you enter 5 for Mathematics, stream A and stream B each get 5 periods. The total for each stream must not exceed the available slots; set 0 for a subject you do not want.</div>
+      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). One number applies to every stream of that class: if you enter 5 for Mathematics, stream A and stream B each get 5 periods. The total for each stream must not exceed the available slots; set 0 for a subject you do not want.
+        One teacher may teach the same subject in every stream &mdash; the generator never puts that teacher in two streams at the same time.</div>
     </div>
   </div>
 

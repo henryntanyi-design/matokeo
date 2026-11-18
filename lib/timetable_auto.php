@@ -69,7 +69,13 @@ function tta_enrolment($school_id, $class_id) {
  * @param int $override  Idadi ya mikondo iliyowekwa kwa mkono (0 = kutoka wanafunzi).
  */
 function tta_plan_streams($school_id, $class_id, $override = 0) {
-    $enrol = tta_enrolment($school_id, $class_id);
+    // Bila safu ya `stream` kwenye wanafunzi, idadi iliyowekwa kwa mkono
+    // (override) bado inatumika: tunarudi kwenye darasa lenye wanafunzi 0.
+    try {
+        $enrol = tta_enrolment($school_id, $class_id);
+    } catch (Exception $e) {
+        $enrol = ['total' => 0, 'existing' => [], 'unassigned' => 0];
+    }
     $total = $enrol['total'];
 
     // Bila idadi iliyowekwa, tumia idadi ya streams zilizopo kwa wanafunzi.
