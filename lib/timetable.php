@@ -1890,35 +1890,67 @@ function tt_render_table(array $matrix, $forPdf = false, $paper = 'A4') {
     };
 
     if ($forPdf) {
-        /* PDF: siku zinabaki kama kundi (merged Day column). Ili Day
-           isijitenge na Form kwenye pagination, vunja kurasa kati ya siku
-           (si katikati ya siku): siku inayoshuka inaenda kwenye ukurasa
-           wa chini ikiwa na siku yake. */
+        /* PDF: maudhui yanaendelea kwenye ukurasa mmoja; siku zinafuatana.
+           Maudhui yakizidi ukurasa, yanaendelea kwenye ukurasa wa chini
+           pamoja na kichwa (thead) na muundo wa safu. Siku inayovuka
+           ukurasa inajirudia kwenye ukurasa wa chini kwenye safu ya Day. */
         $pageHeight = $paper === 'A3' ? 841.89 : 595.28;
         $usable = $pageHeight - 34.0 - 22.0 - 26.0;
         $rowsPerPage = max(4, (int)floor($usable / 38.0));
 
+        // Safu zote kwa mpangilio (kila safu = darasa moja).
+        $flat = [];
+        foreach ($matrix['rows'] as $dayRow) {
+            foreach ($dayRow['classes'] as $classRow) {
+                $flat[] = ['dayRow' => $dayRow, 'classRow' => $classRow];
+            }
+        }
+
+        // Gawanya kwenye kurasa (hakuna kuvunja siku kwa nguvu, lakini
+        // siku inayovuka ukurasa inajirudia kwenye ukurasa wa chini).
         $chunks = [];
         $current = [];
         $used = 0;
-        foreach ($matrix['rows'] as $dayRow) {
-            $rows = max(1, count($dayRow['classes']));
-            if ($current && $used + $rows > $rowsPerPage) {
+        foreach ($flat as $item) {
+            if ($current && $used >= $rowsPerPage) {
                 $chunks[] = $current;
                 $current = [];
                 $used = 0;
             }
-            $current[] = $dayRow;
-            $used += $rows;
+            $current[] = $item;
+            $used++;
         }
         if ($current) $chunks[] = $current;
 
         $html = '';
         $lastChunk = count($chunks) - 1;
         foreach ($chunks as $i => $chunk) {
+            // Jenga synthetic dayRows kwa chunk hii: siku inayovuka ukurasa
+            // inajirudia kwenye chunk inayofuata (rowspan = segment length).
+            $synth = [];
+            $idx = 0;
+            $n = count($chunk);
+            while ($idx < $n) {
+                $dr = $chunk[$idx]['dayRow'];
+                $start = $idx;
+                while ($idx < $n && $chunk[$idx]['dayRow']['label'] === $dr['label']) $idx++;
+                $segClasses = array_map(function ($it) { return $it['classRow']; }, array_slice($chunk, $start, $idx - $start));
+                $segLen = count($segClasses);
+                $segDayRow = $dr;
+                $segDayRow['classes'] = $segClasses;
+                $segDayRow['rowspan'] = $segLen;
+                // Cap event spans to this segment.
+                if (!empty($segDayRow['event_start'])) {
+                    foreach ($segDayRow['event_start'] as $k => $ev) {
+                        $segDayRow['event_start'][$k]['span'] = min((int)$ev['span'], $segLen);
+                    }
+                }
+                $synth[] = $segDayRow;
+            }
+
             $html .= '<div class="tt-page' . ($i < $lastChunk ? ' tt-page-break' : '') . '">'
                    . '<table class="tt-table tt-pdf">' . $colgroup . $renderHead();
-            foreach ($chunk as $dayRow) {
+            foreach ($synth as $dayRow) {
                 $html .= '<tbody class="tt-day-group">' . $renderDay($dayRow, 'pdf') . '</tbody>';
             }
             $html .= '</table></div>';
