@@ -1734,7 +1734,6 @@ function tt_css() {
 .tt-signoff .tt-sign-last{text-align:right}
 .tt-table.tt-pdf{table-layout:fixed;width:100%}
 .tt-table.tt-pdf thead{display:table-header-group}
-.tt-table.tt-pdf tbody.tt-day-group{page-break-inside:avoid;break-inside:avoid}
 .tt-table.tt-pdf tr{page-break-inside:avoid;break-inside:avoid}
 .tt-page-break{page-break-after:always;break-after:page}
 .tt-page{page-break-inside:auto}
