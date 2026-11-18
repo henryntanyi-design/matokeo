@@ -32,7 +32,6 @@ function tta_time_in($v, $default) {
     return teaching_time_minutes($v) === null ? $default : $v;
 }
 
-$maxPerStream = tta_int_in($src['max_per_stream'] ?? TTA_DEFAULT_MAX_PER_STREAM, 1, 500, TTA_DEFAULT_MAX_PER_STREAM);
 $streamsOverride = tta_int_in($src['streams'] ?? 0, 0, TTA_MAX_STREAMS, 0);
 $sessions = tta_int_in($src['sessions_per_day'] ?? 11, 1, 14, 11);
 $duration = tta_int_in($src['session_duration'] ?? 40, 15, 120, 40);
@@ -58,7 +57,7 @@ foreach ($slots['items'] as $it) {
     if (($it['type'] ?? '') === 'session' && (int)$it['start'] < (int)$lunchCut) $morningSlots++;
 }
 
-$plan = $class ? tta_plan_streams($school_id, $class_id, $maxPerStream, $streamsOverride) : null;
+$plan = $class ? tta_plan_streams($school_id, $class_id, $streamsOverride) : null;
 $labelsInput = $isPost ? trim((string)($_POST['labels'] ?? '')) : (($plan && count($plan['labels']) > 1) ? implode(', ', $plan['labels']) : '');
 $labelList = tt_normalize_streams($labelsInput);
 if (!$labelList && $plan) $labelList = $plan['labels'];
@@ -125,7 +124,6 @@ if ($isPost && ($_POST['action'] ?? '') === 'generate') {
                             'id' => $newId,
                             'class_id' => $class_id,
                             'year_id' => (int)$year['id'],
-                            'max_per_stream' => $maxPerStream,
                             'streams' => $streamsOverride,
                             'labels' => $labelsInput,
                             'sessions_per_day' => $sessions,
@@ -268,18 +266,12 @@ teaching_nav('timetable_auto');
             <?php endforeach; ?>
           </select>
         </div>
-        <div class="col-12 col-lg-4">
-          <label class="form-label small fw-bold mb-1">Max students per stream</label>
-          <input type="number" name="max_per_stream" class="form-control form-control-sm" min="1" max="500" value="<?php echo (int)$maxPerStream; ?>">
-          <div class="form-text">Streams split automatically above this number.</div>
-        </div>
-
         <div class="col-12"><hr class="my-1"></div>
 
         <div class="col-6 col-lg-3">
           <label class="form-label small fw-bold mb-1">Streams for this class</label>
           <input type="number" name="streams" class="form-control form-control-sm" min="0" max="<?php echo TTA_MAX_STREAMS; ?>" value="<?php echo (int)$streamsOverride; ?>">
-          <div class="form-text">0 = automatic from enrolment. Each class can use a different number.</div>
+          <div class="form-text">0 = from the students' streams. No limit on students per stream.</div>
         </div>
         <div class="col-12 col-lg-5">
           <label class="form-label small fw-bold mb-1">Stream names (optional)</label>
@@ -348,14 +340,14 @@ teaching_nav('timetable_auto');
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
       <div>
         <div class="fw-bold" style="color:#16203a"><i class="bi bi-diagram-3 text-primary"></i> Stream plan for <?php echo h($class['name']); ?></div>
-        <div class="small text-muted">Based on <?php echo (int)$plan['total']; ?> active student(s); classrooms and teachers are respected through the manual override.</div>
+        <div class="small text-muted">Based on <?php echo (int)$plan['total']; ?> active student(s). Set the stream count to override what the students' records suggest.</div>
       </div>
       <span class="tta-chip"><i class="bi bi-people"></i> <?php echo count($labelList); ?> stream(s)</span>
     </div>
 
     <div class="row g-2">
       <div class="col-6 col-md-3"><div class="tta-stat"><span class="ico"><i class="bi bi-people"></i></span><div><div class="v"><?php echo (int)$plan['total']; ?></div><div class="l">Students</div></div></div></div>
-      <div class="col-6 col-md-3"><div class="tta-stat g"><span class="ico"><i class="bi bi-columns-gap"></i></span><div><div class="v"><?php echo (int)$plan['auto_count']; ?></div><div class="l">Auto streams</div></div></div></div>
+      <div class="col-6 col-md-3"><div class="tta-stat g"><span class="ico"><i class="bi bi-columns-gap"></i></span><div><div class="v"><?php echo (int)$plan['auto_count']; ?></div><div class="l">From students</div></div></div></div>
       <div class="col-6 col-md-3"><div class="tta-stat a"><span class="ico"><i class="bi bi-sliders"></i></span><div><div class="v"><?php echo count($labelList); ?></div><div class="l">Streams to build</div></div></div></div>
       <div class="col-6 col-md-3"><div class="tta-stat o"><span class="ico"><i class="bi bi-person-lines-fill"></i></span><div><div class="v"><?php echo (int)$plan['per_stream']; ?></div><div class="l">Students / stream</div></div></div></div>
     </div>
@@ -378,15 +370,6 @@ teaching_nav('timetable_auto');
       </div>
     <?php endif; ?>
 
-    <?php if ($plan['overflow']): ?>
-      <div class="alert alert-warning small mt-3 mb-0">
-        These streams are above <?php echo (int)$plan['max_per_stream']; ?> students:
-        <?php foreach ($plan['overflow'] as $label => $n): ?>
-          <b><?php echo h($label); ?> (<?php echo (int)$n; ?>)</b>
-        <?php endforeach; ?>
-        &mdash; raise the stream count or split them on the students page.
-      </div>
-    <?php endif; ?>
   </div>
 </div>
 <?php endif; ?>

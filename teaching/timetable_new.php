@@ -21,11 +21,7 @@ foreach ($classes as $c) $classMap[(int)$c['id']] = $c;
 
 /* ---------------- Mikondo (streams) ---------------- */
 
-// Kikomo cha wanafunzi kwa mkondo: mgawanyo wa automatic hutumia hii.
-$fMaxPerStream = (int)($_POST['max_per_stream'] ?? $_GET['max_per_stream'] ?? TTA_DEFAULT_MAX_PER_STREAM);
-$fMaxPerStream = max(1, min(500, $fMaxPerStream));
-
-// Idadi ya mikondo kwa kila darasa; 0 = automatic kutoka idadi ya wanafunzi.
+// Idadi ya mikondo kwa kila darasa; 0 = kutoka streams za wanafunzi.
 $countBag = is_array($_POST['streams_class'] ?? null) ? $_POST['streams_class']
           : (is_array($_GET['streams_class'] ?? null) ? $_GET['streams_class'] : []);
 $classStreamCount = [];
@@ -42,7 +38,7 @@ $classPlans = [];
 if ($classMap) {
     try {
         foreach (array_keys($classMap) as $cid) {
-            $classPlans[(int)$cid] = tta_plan_streams($school_id, (int)$cid, $fMaxPerStream, (int)($classStreamCount[(int)$cid] ?? 0));
+            $classPlans[(int)$cid] = tta_plan_streams($school_id, (int)$cid, (int)($classStreamCount[(int)$cid] ?? 0));
         }
     } catch (Exception $e) {
         // Bila safu ya `stream` kwenye students, tunaendelea bila kugawanya.
@@ -237,7 +233,7 @@ teaching_nav('timetable');
   <div class="card-header bg-white fw-bold">Timetable settings</div>
   <div class="card-body">
     <form method="get" class="row g-2 align-items-end">
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-5">
         <label class="form-label small fw-bold mb-1">Academic year</label>
         <select name="year_id" class="form-select form-select-sm">
           <?php foreach ($years as $y): ?>
@@ -245,17 +241,13 @@ teaching_nav('timetable');
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-5">
         <label class="form-label small fw-bold mb-1">Group</label>
         <select name="group" class="form-select form-select-sm">
           <?php foreach (tt_groups() as $g => $label): ?>
             <option value="<?php echo h($g); ?>"<?php echo $group === $g ? ' selected' : ''; ?>><?php echo h($label); ?></option>
           <?php endforeach; ?>
         </select>
-      </div>
-      <div class="col-12 col-md-2">
-        <label class="form-label small fw-bold mb-1">Max students / stream</label>
-        <input type="number" name="max_per_stream" class="form-control form-control-sm" min="1" max="500" value="<?php echo (int)$fMaxPerStream; ?>">
       </div>
       <div class="col-12 col-md-2 d-flex gap-2">
         <button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-arrow-repeat"></i> Apply</button>
@@ -268,8 +260,7 @@ teaching_nav('timetable');
                 <tr>
                   <th>Class</th>
                   <th class="text-center">Students</th>
-                  <th class="text-center">Auto streams</th>
-                  <th style="width:170px">Streams (0 = auto)</th>
+                  <th style="width:170px">Streams (0 = from students)</th>
                   <th>Building</th>
                 </tr>
               </thead>
@@ -278,7 +269,6 @@ teaching_nav('timetable');
                   <tr>
                     <td class="fw-bold"><?php echo h($c['name']); ?></td>
                     <td class="text-center"><?php echo (int)($p['total'] ?? 0); ?></td>
-                    <td class="text-center"><?php echo (int)($p['auto_count'] ?? 1); ?></td>
                     <td>
                       <input type="number" name="streams_class[<?php echo $cid; ?>]" class="form-control form-control-sm" min="0" max="<?php echo TTA_MAX_STREAMS; ?>" value="<?php echo (int)($classStreamCount[$cid] ?? 0); ?>">
                     </td>
@@ -294,9 +284,9 @@ teaching_nav('timetable');
             </table>
           </div>
           <div class="form-text">
-            0 = split automatically from enrolment (above the max students per stream).
-            Set a number to fix the streams of that class &mdash; each class can have a different number.
-            Click <b>Apply</b> after changing the numbers so the period table below follows.
+            0 = follow the streams already recorded for the students (whole class if none).
+            Set a number to decide the streams of that class yourself &mdash; each class can have a different number.
+            There is no maximum number of students per stream. Click <b>Apply</b> after changing the numbers so the period table below follows.
           </div>
         </div>
       <?php endif; ?>
@@ -319,7 +309,6 @@ teaching_nav('timetable');
   <?php echo csrf_field(); ?>
   <input type="hidden" name="year_id" value="<?php echo (int)$year['id']; ?>">
   <input type="hidden" name="group" value="<?php echo h($group); ?>">
-  <input type="hidden" name="max_per_stream" value="<?php echo (int)$fMaxPerStream; ?>">
   <?php foreach ($classMap as $cid => $c): ?>
     <input type="hidden" name="streams_class[<?php echo (int)$cid; ?>]" value="<?php echo (int)($classStreamCount[(int)$cid] ?? 0); ?>">
   <?php endforeach; ?>

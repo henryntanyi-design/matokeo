@@ -12,7 +12,6 @@
 require_once __DIR__ . '/timetable.php';
 
 const TTA_MAX_STREAMS = 12;
-const TTA_DEFAULT_MAX_PER_STREAM = 50;
 const TTA_MAX_PERIODS_PER_SUBJECT_PER_DAY = 2;
 
 /** Letters used for stream names: A, B, C ... */
@@ -63,15 +62,18 @@ function tta_enrolment($school_id, $class_id) {
 /**
  * Work out how the class should be split into streams.
  *
- * @param int $max_per_stream  Automatic rule: one stream per N students.
- * @param int $override        Manual override: exact number of streams (0 = automatic).
+ * Hakuna kikomo cha idadi ya wanafunzi kwa mkondo. Idadi ya mikondo hutokana
+ * na uamuzi wa mtumiaji; bila hiyo, hufuata streams zilizoandikishwa kwa
+ * wanafunzi (au darasa zima kama hakuna stream).
+ *
+ * @param int $override  Idadi ya mikondo iliyowekwa kwa mkono (0 = kutoka wanafunzi).
  */
-function tta_plan_streams($school_id, $class_id, $max_per_stream = TTA_DEFAULT_MAX_PER_STREAM, $override = 0) {
-    $max_per_stream = max(1, min(500, (int)$max_per_stream));
+function tta_plan_streams($school_id, $class_id, $override = 0) {
     $enrol = tta_enrolment($school_id, $class_id);
     $total = $enrol['total'];
 
-    $auto = $total > 0 ? (int)ceil($total / $max_per_stream) : 1;
+    // Bila idadi iliyowekwa, tumia idadi ya streams zilizopo kwa wanafunzi.
+    $auto = count($enrol['existing']) > 0 ? count($enrol['existing']) : 1;
     $count = (int)$override > 0 ? (int)$override : $auto;
     $count = max(1, min(TTA_MAX_STREAMS, $count));
 
@@ -80,21 +82,14 @@ function tta_plan_streams($school_id, $class_id, $max_per_stream = TTA_DEFAULT_M
     $labels = count($enrol['existing']) === $count ? array_keys($enrol['existing']) : tta_stream_labels($count);
     sort($labels, SORT_NATURAL | SORT_FLAG_CASE);
 
-    $overflow = [];
-    foreach ($enrol['existing'] as $label => $n) {
-        if ($n > $max_per_stream) $overflow[$label] = $n;
-    }
-
     return [
         'total' => $total,
         'existing' => $enrol['existing'],
         'unassigned' => $enrol['unassigned'],
-        'max_per_stream' => $max_per_stream,
         'auto_count' => min(TTA_MAX_STREAMS, max(1, $auto)),
         'count' => $count,
         'labels' => $labels,
         'per_stream' => $total > 0 ? (int)ceil($total / $count) : 0,
-        'overflow' => $overflow,
         'overridden' => (int)$override > 0,
     ];
 }
