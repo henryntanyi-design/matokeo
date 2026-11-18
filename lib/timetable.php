@@ -1890,39 +1890,15 @@ function tt_render_table(array $matrix, $forPdf = false, $paper = 'A4') {
     };
 
     if ($forPdf) {
-        /* Kichwa kimoja kwa kila ukurasa, siku za wiki zikipangwa chini yake.
-           Ili siku isikatike katikati, hesabu safu zinazotosha ukurasa mmoja
-           (Dompdf haitekelezi page-break-inside:avoid kwenye tbody) na
-           vunja kurasa kati ya siku. */
-        $pageHeight = $paper === 'A3' ? 841.89 : 595.28; // pt, landscape
-        $usable = $pageHeight - 34.0 /* margins */ - 22.0 /* page number */ - 26.0 /* header */;
-        $rowsPerPage = max(4, (int)floor($usable / 38.0)); // ~38pt kwa kila safu (na nafasi ya ziada)
-
-        $chunks = [];
-        $current = [];
-        $used = 0;
+        /* PDF: jedwali moja linaloendelea bila kuvunja kurasa kwa nguvu.
+           Siku zinafuatana kwenye ukurasa mmoja; kama maudhui yakizidi
+           ukurasa, yanaendelea kwenye ukurasa wa chini (pagination ya
+           Dompdf). Kichwa (thead) hurudiwa juu ya kila ukurasa. */
+        $html = '<div class="tt-page"><table class="tt-table tt-pdf">' . $colgroup . $renderHead();
         foreach ($matrix['rows'] as $dayRow) {
-            $rows = max(1, count($dayRow['classes']));
-            if ($current && $used + $rows > $rowsPerPage) {
-                $chunks[] = $current;
-                $current = [];
-                $used = 0;
-            }
-            $current[] = $dayRow;
-            $used += $rows;
+            $html .= '<tbody class="tt-day-group">' . $renderDay($dayRow, 'pdf') . '</tbody>';
         }
-        if ($current) $chunks[] = $current;
-
-        $html = '';
-        $lastChunk = count($chunks) - 1;
-        foreach ($chunks as $i => $chunk) {
-            $html .= '<div class="tt-page' . ($i < $lastChunk ? ' tt-page-break' : '') . '">'
-                   . '<table class="tt-table tt-pdf">' . $colgroup . $renderHead();
-            foreach ($chunk as $dayRow) {
-                $html .= '<tbody class="tt-day-group">' . $renderDay($dayRow, 'pdf') . '</tbody>';
-            }
-            $html .= '</table></div>';
-        }
+        $html .= '</table></div>';
         return $html;
     }
 
