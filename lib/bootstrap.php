@@ -229,7 +229,7 @@ function home_url() {
     $u = user();
     if ($u) return $u['role'] === 'super' ? 'super/dashboard.php' : ($u['role'] === 'admin' ? 'admin/dashboard.php' : 'teacher/dashboard.php');
     if (student()) return 'student/dashboard.php';
-    return 'login.php';
+    return 'index.php';
 }
 
 /** Je, mwalimu huyu amepangiwa darasa na somo hili? */

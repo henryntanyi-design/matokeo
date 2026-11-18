@@ -82,8 +82,8 @@ layout_start('Saved Report Info', 'reportinfo'); ?>
       </div></div>
   </div>
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-light btn-sm fw-semibold rounded-3" href="<?php echo h(url('admin/report_info.php')); ?>"><i class="bi bi-arrow-left me-1"></i>Back</a>
-    <a class="btn btn-warning btn-sm fw-semibold rounded-3" href="<?php echo h(url($editUrl)); ?>"><i class="bi bi-pencil-square me-1"></i>Edit</a>
+    <a class="btn btn-light btn-sm fw-semibold rounded-3" href="<?php echo h(url('admin/report_info.php')); ?>"><i class="bi bi-journal-plus me-1"></i>Prepare report info</a>
+    <?php if ($ri): ?><a class="btn btn-warning btn-sm fw-semibold rounded-3" href="<?php echo h(url($editUrl)); ?>"><i class="bi bi-pencil-square me-1"></i>Edit</a><?php endif; ?>
   </div>
 </div>
 

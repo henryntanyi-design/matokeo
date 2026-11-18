@@ -9,12 +9,15 @@ function nav_items() {
         ['subjects', 'Subjects', 'super/subjects.php', 'book'], ['grading', 'Grading', 'super/grading.php', 'sliders'],
         ['settings', 'Settings & Years', 'super/settings.php', 'gear'], ['profile', 'My Account', 'profile.php', 'person-circle']];
     if ($u && is_admin()) {
-        $n = [['dashboard', 'Dashboard', 'admin/dashboard.php', 'speedometer2'], ['students', 'Students', 'admin/students.php', 'people-fill'],
+        $n = [['dashboard', 'Dashboard', 'admin/dashboard.php', 'speedometer2'],
+              ['students', 'Students', 'admin/students.php', 'people'],
+              ['classes', 'Classes', 'admin/classes.php', 'building'],
               ['subjects', 'Subjects', 'admin/subjects.php', 'book'],
-              ['teachers', 'Teachers & Users', 'admin/teachers.php', 'person-badge'], ['assign', 'Assignments', 'admin/assignments.php', 'diagram-3'],
-              ['teach', 'Teaching', 'teaching/index.php', 'calendar3'],
-              ['exams', 'Exams & Results', 'admin/exams.php', 'journal-text'],
-              ['reportinfo', 'Report Info', 'admin/report_info.php', 'clipboard2-check'],
+              ['assign', 'Assignments', 'admin/assignments.php', 'diagram-3'],
+              ['exams', 'Exams', 'admin/exams.php', 'journal-text'],
+              ['reportinfo', 'Report Info', 'admin/report_info_view.php', 'clipboard2-check'],
+              ['teachers', 'Staff', 'admin/teachers.php', 'person-badge'],
+              ['teach', 'Learning Materials', 'teaching/index.php', 'calendar3'],
               ['settings', 'School Profile', 'admin/settings.php', 'gear']];
         if ($u['role'] === 'super') $n[] = ['schools', '« Back to District', 'super/dashboard.php?exit=1', 'arrow-left-circle'];
         $n[] = ['profile', 'My Account', 'profile.php', 'person-circle'];
@@ -24,6 +27,10 @@ function nav_items() {
                     ['results', 'Results', 'teacher/results_list.php', 'bar-chart'], ['profile', 'My Account', 'profile.php', 'person-circle']];
     if (student()) return [['dashboard', 'My Results', 'student/dashboard.php', 'journal-check'], ['profile', 'Change PIN', 'profile.php', 'key']];
     return [];
+}
+/* Ukurasa wa sasa ni sawa na path ya menyu? (kwa kutumia jina la faili) */
+function nav_page_is($path) {
+    return basename((string)$path, '.php') === basename((string)($_SERVER['PHP_SELF'] ?? ''), '.php');
 }
 function layout_start($title, $active = '', $pageLabel = null) {
     if ($pageLabel === null) $pageLabel = $title;
@@ -75,6 +82,9 @@ body{background:#f3f5fb}
 .main-nav .nav-link.active{background:rgba(255,255,255,.16);color:#fff;border-left-color:#ffc107;font-weight:600}
 .main-nav .nav-logout{color:#ffc9c9;margin-top:4px;border-top:1px solid rgba(255,255,255,.12)}
 .main-nav .nav-logout:hover{background:rgba(255,80,80,.18);color:#fff}
+.side .nav-link>i.bi,.main-nav .nav-link>i.bi{width:1.15rem;flex:0 0 auto;text-align:center;font-size:.96rem;opacity:.9}
+.side .nav-link.active>i.bi,.main-nav .nav-link.active>i.bi{opacity:1}
+.side .nav-link>span,.main-nav .nav-link>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .main-nav .btn-close{filter:invert(1) grayscale(1) brightness(2)}
 .user-chip{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(180deg,#ffffff,#f7faff);border:1px solid #e2e8f6;border-radius:999px;padding:4px 14px 4px 4px;text-decoration:none;color:#16203a;max-width:300px;
   transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
@@ -123,10 +133,11 @@ body{background:#f3f5fb}
   .user-chip{max-width:52vw}}
 @media print{.side,.topbar,.no-print{display:none!important}.main{margin-left:0!important}}
 </style></head><body>
-<div class="side"><div class="brand"><img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo"><div class="brand-text"><?php echo h(system_name()); ?></div></div>
-  <ul class="nav flex-column mt-2">
-  <?php foreach ($items as $it): ?><li><a class="nav-link <?php echo $active === $it[0] ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <?php echo h($it[1]); ?></a></li><?php endforeach; ?>
-    <li><a class="nav-link" href="<?php echo h(url('logout.php')); ?>"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
+<div class="side"><div class="brand"><img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo"><div class="brand-text"><?php echo h(system_name()); ?></div></div>      <ul class="nav flex-column mt-2">
+  <?php foreach ($items as $it): ?>
+    <li><a class="nav-link <?php echo ($active === $it[0] || nav_page_is($it[2])) ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <span><?php echo h($it[1]); ?></span></a></li>
+  <?php endforeach; ?>
+      <li><a class="nav-link nav-logout" href="<?php echo h(url('logout.php')); ?>"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
   </ul></div>
 <div class="main">
   <div class="topbar">
@@ -157,7 +168,9 @@ body{background:#f3f5fb}
     </div>
     <div class="offcanvas-body p-0">
       <ul class="nav flex-column">
-      <?php foreach ($items as $it): ?><li><a class="nav-link <?php echo $active === $it[0] ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <?php echo h($it[1]); ?></a></li><?php endforeach; ?>
+      <?php foreach ($items as $it): ?>
+        <li><a class="nav-link <?php echo ($active === $it[0] || nav_page_is($it[2])) ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <span><?php echo h($it[1]); ?></span></a></li>
+      <?php endforeach; ?>
         <li><a class="nav-link nav-logout" href="<?php echo h(url('logout.php')); ?>"><i class="bi bi-box-arrow-left"></i> Logout</a></li>
       </ul>
     </div>

@@ -82,9 +82,20 @@ body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .lg-title{font-size:1.5rem;font-weight:800;line-height:1.22;letter-spacing:-.01em}
 .lg-sub{font-size:.85rem;opacity:.9;line-height:1.6;max-width:34ch}
 .lg-feat{list-style:none;padding:0;margin:4px 0 0;font-size:.83rem;display:grid;gap:11px}
-.lg-feat li{display:flex;align-items:center;gap:10px}
-.lg-feat i{flex:0 0 27px;height:27px;border-radius:9px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.16);display:inline-flex;align-items:center;justify-content:center;font-size:.82rem}
+.lg-feat li{display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);animation:lgFadeIn .5s ease both}
+.lg-feat li:nth-child(1){animation-delay:.12s}
+.lg-feat li:nth-child(2){animation-delay:.24s}
+.lg-feat li:nth-child(3){animation-delay:.36s}
+@keyframes lgFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.lg-feat i{flex:0 0 27px;height:27px;border-radius:9px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.16);display:inline-flex;align-items:center;justify-content:center;font-size:.82rem;transition:box-shadow .25s,background .2s,transform .2s}
+.lg-feat li:hover i{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35);box-shadow:0 6px 18px -10px rgba(255,255,255,.35),0 1px 3px rgba(255,255,255,.12);transform:translateY(-1px)}
 .lg-note{font-size:.72rem;color:rgba(255,255,255,.72);letter-spacing:.02em}
+.lg-h-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lg-h-title{font-size:.92rem;font-weight:700;color:#fff;letter-spacing:-.01em}
+.lg-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5b5b;margin-right:8px;box-shadow:0 0 0 3px rgba(255,91,91,.25);animation:lgPulse 2s infinite}
+@keyframes lgPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(255,91,91,.25)}50%{transform:scale(1.15);box-shadow:0 0 0 6px rgba(255,91,91,.15)}}
+.lg-home-btn{border:1px solid rgba(255,255,255,.55);color:#fff;font-weight:600;font-size:.82rem;padding:.52rem .9rem;border-radius:999px;transition:background .2s,border-color .2s,transform .2s}
+.lg-home-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.85);color:#fff;transform:translateY(-1px)}
 .lg-form{flex:1 1 400px;padding:40px 38px 28px;position:relative;z-index:1}
 .lg-badge{display:inline-flex;align-items:center;gap:6px;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:#1b7f4b;background:#eaf7f0;border:1px solid #cfeee0;border-radius:999px;padding:4px 10px;margin-bottom:14px}
@@ -139,6 +150,12 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
         <div>
           <div class="lg-title"><?php echo h(system_name()); ?></div>
           <div class="lg-sub mt-2">Results management system, progress reports and student records.</div>
+          <div class="mt-3">
+            <div class="lg-h-row">
+              <div class="lg-h-title">Welcome <span class="lg-dot"></span></div>
+              <a class="lg-home-btn" href="<?php echo h(url('index.php')); ?>"><i class="bi bi-house-door me-1"></i>Home</a>
+            </div>
+          </div>
         </div>
         <ul class="lg-feat">
           <li><i class="bi bi-bar-chart-line"></i> Results and subject analysis</li>
@@ -161,9 +178,21 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
 
       <?php flash_show(); if ($err): ?><div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle me-1"></i><?php echo h($err); ?></div><?php endif; ?>
       <form method="post"><?php echo csrf_field(); ?><input type="hidden" name="type" value="<?php echo h($tab); ?>">
-      <?php if ($tab === 'student'): ?><div class="mb-3"><label class="form-label">School</label><select name="school_id" class="form-select" required><option value="">-- select school --</option><?php foreach (q_all('SELECT id, name FROM schools WHERE active = 1 ORDER BY name') as $sc) echo '<option value="' . (int)$sc['id'] . '"' . ((int)($_POST['school_id'] ?? 0) === (int)$sc['id'] ? ' selected' : '') . '>' . h($sc['name']) . '</option>'; ?></select></div><?php endif; ?>
-      <div class="mb-3"><label class="form-label" for="identifier"><?php echo $tab === 'staff' ? 'Cheque Number / Email' : 'Index No / Candidate No'; ?></label>
-        <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-person-badge"></i></span><input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username"<?php echo $tab === 'staff' ? ' placeholder="e.g. 1234567"' : ''; ?>></div></div>
+      <?php if ($tab === 'student'): ?>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">School</label>
+          <select name="school_id" class="form-select" required><option value="">-- select school --</option><?php foreach (q_all('SELECT id, name FROM schools WHERE active = 1 ORDER BY name') as $sc) echo '<option value="' . (int)$sc['id'] . '"' . ((int)($_POST['school_id'] ?? 0) === (int)$sc['id'] ? ' selected' : '') . '>' . h($sc['name']) . '</option>'; ?></select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="identifier">Index No / Candidate No</label>
+          <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-person-badge"></i></span><input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username"></div>
+        </div>
+      </div>
+      <?php else: ?>
+      <div class="mb-3"><label class="form-label" for="identifier">Cheque Number / Email</label>
+        <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-person-badge"></i></span><input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username" placeholder="e.g. 1234567"></div></div>
+      <?php endif; ?>
       <div class="mb-3"><label class="form-label" for="secret"><?php echo $tab === 'staff' ? 'Password' : 'PIN'; ?></label>
         <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-lock"></i></span><input name="secret" id="secret" type="password" class="form-control ig-in" required autocomplete="current-password"><span class="input-group-text ig-tail"><button type="button" class="lg-eye" data-for="secret" aria-label="Show password"><i class="bi bi-eye"></i></button></span></div></div>
       <button class="btn btn-primary w-100 lg-btn"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in</button></form>
