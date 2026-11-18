@@ -131,7 +131,17 @@ $capacity = tt_compulsory_capacity(['days' => $days, 'slots' => $slots, 'breaks'
 $remedialSlots = count(tt_remedial_nos(['days' => $days, 'slots' => $slots, 'breaks' => $cfgBreaks]));
 
 /* Requirements: values submitted by POST, otherwise defaults (kwa kila stream). */
+// Defaults za mtaala kwa kila stream: hizi hujazwa kwanza ili kubadilisha
+// idadi ya mikondo (Apply) kusiondoe vipindi vilivyokwishajazwa.
 $reqValues = [];
+$defaults = tt_default_requirements($classes, $capacity);
+foreach ($defaults as $r) {
+    $rcid = (int)$r['class_id'];
+    foreach (array_keys($classStreams[$rcid] ?? ['']) as $si) {
+        $reqValues[$rcid][(int)$r['subject_id']][$si] = (int)$r['periods_per_week'];
+    }
+}
+// Kisha maadili yaliyowasilishwa (pamoja na 0) yanachukua nafasi ya defaults.
 if ($isPost) {
     foreach (($_POST['required'] ?? []) as $cid => $subs) {
         if (!is_array($subs) || !isset($classMap[(int)$cid])) continue;
@@ -142,14 +152,6 @@ if ($isPost) {
                 if (!isset($classStreams[(int)$cid][$si])) continue;
                 $reqValues[(int)$cid][(int)$sid][$si] = max(0, (int)$n);
             }
-        }
-    }
-} else {
-    $defaults = tt_default_requirements($classes, $capacity);
-    foreach ($defaults as $r) {
-        $rcid = (int)$r['class_id'];
-        foreach (array_keys($classStreams[$rcid] ?? ['']) as $si) {
-            $reqValues[$rcid][(int)$r['subject_id']][$si] = (int)$r['periods_per_week'];
         }
     }
 }

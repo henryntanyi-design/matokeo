@@ -1542,10 +1542,18 @@ function tt_build_matrix(array $tt, array $classes, array $opts = []) {
         $idx[$key][(string)$e['day']][(int)$e['period_no']] = $e;
     }
 
+    // Idadi ya streams kwa kila darasa kwenye ratiba hii (bila kujali filter):
+    // darasa lenye mkondo mmoja huonyeshwa jina la darasa pekee.
+    $streamsPerClass = [];
+    foreach ($allEntries as $e) {
+        $streamsPerClass[(int)$e['class_id']][trim((string)($e['stream'] ?? ''))] = true;
+    }
+
     // Orodha ya safu za darasa + stream kwa mpangilio wa madarasa.
     $entityRows = [];
     foreach ($classes as $c) {
         $cid = (int)$c['id'];
+        $singleStream = count($streamsPerClass[$cid] ?? []) <= 1;
         $streamsHere = [];
         foreach ($allEntries as $e) {
             if ((int)$e['class_id'] !== $cid) continue;
@@ -1564,7 +1572,7 @@ function tt_build_matrix(array $tt, array $classes, array $opts = []) {
                 'key' => $cid . '|' . $stream,
                 'class' => $c,
                 'stream' => $stream,
-                'label' => tt_entity_name((string)$c['name'], $stream),
+                'label' => $singleStream ? (string)$c['name'] : tt_entity_name((string)$c['name'], $stream),
             ];
         }
     }
