@@ -470,5 +470,11 @@ img{max-width:100%;display:block}
   document.querySelectorAll('.reveal,.reveal-stagger').forEach(function (el) { io.observe(el); });
 })();
 </script>
+<a class="hm-wa-float" href="https://whatsapp.com/channel/0029Vb9x8VBHbFVDPFy3jX0t" target="_blank" rel="noopener" aria-label="Join our WhatsApp channel"><i class="bi bi-whatsapp"></i></a>
+<style>
+.hm-wa-float{position:fixed;right:20px;bottom:20px;z-index:1050;width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 12px 30px -10px rgba(37,211,102,.7);transition:transform .18s,box-shadow .18s;text-decoration:none}
+.hm-wa-float:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 16px 34px -10px rgba(37,211,102,.85);color:#fff}
+@media (max-width:479px){.hm-wa-float{width:50px;height:50px;font-size:1.4rem;right:14px;bottom:14px}}
+</style>
 </body>
 </html>
