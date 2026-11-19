@@ -104,7 +104,7 @@ $showLogo = $logo_url !== '' ? $logo_url : $nat;
       <div class="z">
         <?php if ($showLogo !== ''): ?><img src="<?php echo h($showLogo); ?>" alt="Logo" class="lg-logo"><?php endif; ?>
         <div>
-          <div class="lg-title"><?php echo h(system_name()); ?></div>
+          <div class="lg-title">OASIS</div>
           <div class="lg-sub mt-2">Regain access to your account in three quick steps.</div>
         </div>
         <ul class="lg-steps">

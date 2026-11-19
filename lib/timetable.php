@@ -81,19 +81,15 @@ function tt_assignment_for(array $map, $class_id, $subject_id, $stream = '') {
     $stream = trim((string)$stream);
     $base = $cid . ':' . $sid;
 
-    $k = $base . ':' . $stream;
-    if (isset($map[$k])) return $map[$k];
     if ($stream !== '') {
+        $k = $base . ':' . $stream;
+        if (isset($map[$k])) return $map[$k];
         $lk = $base . ':' . mb_strtolower($stream);
         if (isset($map[$lk])) return $map[$lk];
-        // Hakuna fallback kwa darasa zima: kama mwalimu hajaassigniwa
-        // kwa mkondo huu mahususi, vipindi vya mkondo huu vikae tupu.
+        // Hakuna ugawaji kwa mkondo huu mahususi: mwalimu aliyepangiwa
+        // darasa zima (stream tupu) hufundisha stream zote za darasa hilo.
     }
-    // Darasa zima (hakuna mkondo): tumia ugawaji wa darasa zima.
-    if ($stream === '') {
-        return $map[$base . ':'] ?? ($map[$base] ?? null);
-    }
-    return null;
+    return $map[$base . ':'] ?? ($map[$base] ?? null);
 }
 
 function tt_groups() {
@@ -1000,6 +996,15 @@ function tt_validate_input(array $in, $school_id) {
         }
     }
 
+    // Ramani halisi ya mikondo ya kila darasa (hiari). Formu inaituma ili
+    // darasa lenye mkondo mmoja lisipewe jina la mkondo wa darasa lingine.
+    $classStreamMap = [];
+    if (isset($in['class_streams']) && is_array($in['class_streams'])) {
+        foreach ($in['class_streams'] as $cid => $labels) {
+            $classStreamMap[(int)$cid] = array_values((array)$labels);
+        }
+    }
+
     $requirements = [];
     $classTotals = [];
     $rawReq = is_array($in['required'] ?? null) ? $in['required'] : [];
@@ -1012,8 +1017,13 @@ function tt_validate_input(array $in, $school_id) {
             $perStream = is_array($byStream) ? $byStream : [0 => $byStream];
             foreach ($perStream as $si => $n) {
                 $si = (int)$si;
-                if (!isset($streamList[$si])) continue;
-                $stream = $streamList[$si];
+                if (isset($classStreamMap[$cid])) {
+                    if (!isset($classStreamMap[$cid][$si])) continue;
+                    $stream = (string)$classStreamMap[$cid][$si];
+                } else {
+                    if (!isset($streamList[$si])) continue;
+                    $stream = (string)$streamList[$si];
+                }
                 $n = (int)$n;
                 if ($n <= 0) continue;
                 if ($n > 100) $n = 100;

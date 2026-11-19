@@ -184,6 +184,42 @@ function school_label() {
     }
     return system_name(); 
 }
+/** Shule ya kwanza inayotumika - kwa kurasa za umma ambazo hazina shule hai. */
+function primary_school() {
+    static $c = false;
+    if ($c === false) {
+        try { $c = q_one('SELECT * FROM schools WHERE active = 1 ORDER BY id LIMIT 1'); } catch (Exception $e) { $c = null; }
+    }
+    return $c;
+}
+/** Data URI ya logo ya shule iliyopakiwa (assets/uploads/branding), vinginevyo ''. */
+function school_logo_src($school = null) {
+    static $cache = [];
+    if ($school === null) $school = active_school() ?: primary_school();
+    $id = $school ? (int)$school['id'] : 0;
+    if (!$id) return '';
+    if (array_key_exists($id, $cache)) return $cache[$id];
+    $src = '';
+    foreach (glob(dirname(__DIR__) . '/assets/uploads/branding/' . $id . '-school_logo.*') ?: [] as $path) {
+        $info = @getimagesize($path);
+        if ($info && !empty($info['mime'])) {
+            $src = 'data:' . $info['mime'] . ';base64,' . base64_encode((string)file_get_contents($path));
+            break;
+        }
+    }
+    return $cache[$id] = $src;
+}
+/**
+ * Sehemu za brand ya shule: [jina, 'SECONDARY SCHOOL'].
+ * Jina lenye "Secondary School" mwishoni huondolewa ili kisiweke mara mbili.
+ */
+function school_brand_parts($school = null) {
+    if ($school === null) $school = active_school() ?: primary_school();
+    $name = $school ? trim((string)($school['name'] ?? '')) : '';
+    if ($name === '') return ['', ''];
+    $base = preg_replace('/\s+secondary(\s+school)?\s*$/i', '', $name);
+    return [trim($base) !== '' ? trim($base) : $name, 'SECONDARY SCHOOL'];
+}
 /** Namba ya kituo; kama haijawekwa tumia ya muda (S + id ya shule). */
 function school_centre(array $school) {
     $c = strtoupper(trim((string)($school['centre_no'] ?? '')));

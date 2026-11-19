@@ -11,8 +11,8 @@ function level_title($lvl) {
 
 function results_css() {
     return '<style>
-    .ng-doc{font-family:"Times New Roman",Times,serif;color:#000;font-size:11px;background:#F5F5DC;border:2px solid #12314f;padding:10px 12px;font-weight:bold}
-    .ng-doc table{border-collapse:collapse;width:100%;margin-bottom:12px;background:#F5F5DC}
+    .ng-doc{font-family:"Times New Roman",Times,serif;color:#000;font-size:11px;background:#fff;border:2px solid #12314f;padding:10px 12px;font-weight:bold}
+    .ng-doc table{border-collapse:collapse;width:100%;margin-bottom:12px;background:#fff}
     .ng-doc th,.ng-doc td{border:1px solid #12314f;padding:3px 5px;vertical-align:top;text-align:left}
     .ng-doc th{background:#e6f0fa;text-align:center;font-size:10px;color:#12314f;font-weight:bold}
     .ng-doc td.c{text-align:center}
@@ -48,6 +48,21 @@ function competence_level($gpa) {
     if ($g < 4.0)  return ['label' => 'Grade C (Good)', 'bg' => '#ffd966', 'fg' => '#10243a'];
     if ($g < 4.8)  return ['label' => 'Grade D (Satisfactory)', 'bg' => '#f17a1e', 'fg' => '#ffffff'];
     return ['label' => 'Grade F (Fail)', 'bg' => '#c62828', 'fg' => '#ffffff'];
+}
+
+/** Tafsiri ya maoni ya gredi kwa Kiswahili (maoni ya Kiingereza ya default hubadilishwa). */
+function remark_sw($remark) {
+    static $map = [
+        'excellent' => 'Bora',
+        'very good' => 'Vizuri Sana',
+        'good' => 'Vizuri',
+        'average' => 'Wastani',
+        'satisfactory' => 'Inaridhisha',
+        'subsidiary' => 'Ziada',
+        'fail' => 'Amefeli',
+    ];
+    $key = strtolower(trim((string)$remark));
+    return $map[$key] ?? (string)$remark;
 }
 
 /**
@@ -336,6 +351,15 @@ function progress_css() {
     .pf-legend{font-weight:bold;font-size:8.2px;margin:1px 0 2px}
     .pf-legend span{margin-right:11px;color:#0b3d91}
     .pf-line{font-weight:bold;margin:2px 0;font-size:8.8px}
+    .pf-grades{font-size:8.4px;line-height:1.65;margin:2px 0 3px;font-weight:normal;text-align:center}
+    .pf-grade-line{white-space:nowrap;text-align:center}
+    .pf-grade-line .gi{display:inline-block;margin-right:6px}
+    .pf-grade-line .sep{display:inline-block;color:#c9d4e4;margin:0 8px}
+    .pf-grade-line .rg{font-weight:bold;color:#0b3d91}
+    .pf-grade-line .gr{font-weight:bold;color:#16203a}
+    .pf-grade-line .rm{color:#33415c}
+    .pf-grade-line .meta{color:#5b6b85}
+    .pf-grade-line .dv{font-weight:bold;color:#1b7f4b}
     .pf-line b.lbl{color:#1b7f4b}
     .pf-fill{border-bottom:1px dotted #444;display:block;height:10px;margin-top:1px}
     .pf-muted{color:#666}
@@ -451,10 +475,10 @@ function render_student_report(array $d, array $c, array $opt = []) {
     $fmt = function ($v, $dec = 1) { return $v === null ? '-' : rtrim(rtrim(number_format((float)$v, $dec), '0'), '.'); };
     $html .= '<div class="pf-sec"><span class="k">A.</span>Tathmini ya Ufaulu</div>';
     $html .= '<table class="pf-plain"><tr>'
-          .  '<td style="width:25%"><b class="lbl">Jumla ya alama zake ni:</b> <span class="pf-dot">' . h($fmt($c['total'])) . '</span></td>'
-          .  '<td style="width:25%"><b class="lbl">Wastani wa alama zake:</b> <span class="pf-dot">' . h($fmt($c['average'])) . '</span></td>'
+          .  '<td style="width:25%"><b class="lbl">Jumla:</b> <span class="pf-dot">' . h($fmt($c['total'])) . '</span></td>'
+          .  '<td style="width:25%"><b class="lbl">Wastani:</b> <span class="pf-dot">' . h($fmt($c['average'])) . '</span></td>'
           .  '<td style="width:25%"><b class="lbl">Gredi:</b> <span class="pf-dot">' . h($gAvg ? $gAvg['grade'] : '-') . '</span></td>'
-          .  '<td><b class="lbl">Maoni:</b> <span class="pf-dot">' . h($gAvg ? $gAvg['remark'] : '-') . '</span></td></tr>'
+          .  '<td><b class="lbl">Maoni:</b> <span class="pf-dot">' . h($gAvg ? remark_sw($gAvg['remark']) : '-') . '</span></td></tr>'
           .  '<tr><td style="padding-top:6px"><b class="lbl">Amekuwa:</b> <span class="pf-dot">' . (isset($c['position']) ? (int)$c['position'] : '-') . '</span></td>'
           .  '<td><b class="lbl">Kati ya:</b> <span class="pf-dot">' . (isset($c['class_size']) ? (int)$c['class_size'] : '-') . '</span></td>'
           .  '<td><b class="lbl">Daraja:</b> <span class="pf-dot">' . h($c['division']) . '</span></td>'
@@ -465,10 +489,9 @@ function render_student_report(array $d, array $c, array $opt = []) {
 
     // B. Mwalimu wa darasa
     $ctName = strtoupper(trim((string)($ri['class_teacher'] ?? '')));
-    $html .= '<div class="pf-sec"><span class="k">B.</span>Jina la mwalimu wa darasa: <span class="pf-dot" style="min-width:150px">' . h($ctName !== '' ? $ctName : ' ') . '</span>'
+    $html .= '<div class="pf-sec"><span class="k">B.</span>Mwalimu wa darasa: <span class="pf-dot" style="min-width:150px">' . h($ctName !== '' ? $ctName : ' ') . '</span>'
           .  ' &nbsp; Namba ya simu: <span class="pf-dot" style="min-width:110px">' . h(trim((string)($ri['class_phone'] ?? '')) ?: ' ') . '</span></div>';
-    $html .= '<table class="pf-plain"><tr><td style="width:22%;vertical-align:top"><b class="lbl">Maoni ya Mwalimu wa darasa:</b></td>'
-          .  '<td>' . ($rmk['class_teacher'] !== '' ? '<b>' . h($rmk['class_teacher']) . '</b>' : '<span class="pf-fill"></span>') . '</td></tr></table>';
+    $html .= '<div class="pf-line"><b class="lbl">Maoni:</b> ' . ($rmk['class_teacher'] !== '' ? '<b>' . h($rmk['class_teacher']) . '</b>' : '<span class="pf-fill"></span>') . '</div>';
 
     /* --------- Tabia, gredi na maagizo (ukurasa huo huo) --------- */
     $html .= '<div class="pf-sec"><span class="k">C.</span>Tabia na maadili ya mwanafunzi.</div>';
@@ -489,17 +512,28 @@ function render_student_report(array $d, array $c, array $opt = []) {
 
     // D. Gredi za shule na madaraja
     $html .= '<div class="pf-sec"><span class="k">D.</span>Gredi za shule za sekondari na Madaraja</div>';
-    $html .= '<table><thead><tr><th style="width:8%">#</th><th>Alama</th><th>Gredi</th><th>Maoni</th><th>Point</th><th>Daraja</th></tr></thead><tbody>';
     $gs = $d['grading'];   // imepangwa kushuka kwa min_score
+    $gradeItems = [];
     foreach ($gs as $i => $g) {
         $max = $i === 0 ? 100 : ((float)$gs[$i - 1]['min_score'] - 1);
         $min = (float)$g['min_score'];
         $divBand = $min >= 75 ? 'I' : ($min >= 65 ? 'II' : ($min >= 45 ? 'III' : ($min >= 30 ? 'IV' : '0')));
-        $html .= '<tr><td class="c">' . ($i + 1) . '</td><td class="c">' . h($fmt($min) . ' - ' . $fmt($max)) . '</td>'
-              .  '<td class="c"><b>' . h($g['grade']) . '</b></td><td>' . h((string)$g['remark']) . '</td>'
-              .  '<td class="c">' . (int)$g['points'] . '</td><td class="c"><b>' . h($divBand) . '</b></td></tr>';
+        $gradeItems[] = '<span class="gi">'
+            .  '<span class="rg">' . h($fmt($min) . ' - ' . $fmt($max)) . '</span> '
+            .  '<span class="gr">' . h($g['grade']) . '</span> '
+            .  '<span class="rm">' . h(remark_sw($g['remark'])) . '</span>'
+            .  '<span class="meta"> &middot; Point ' . (int)$g['points'] . ' &middot; Daraja </span>'
+            .  '<span class="dv">' . h($divBand) . '</span></span>';
     }
-    $html .= '</tbody></table>';
+    if ($gradeItems) {
+        // Gredi zote kwenye mistari miwili pekee (mf. 3 + 2).
+        $perLine = (int)ceil(count($gradeItems) / 2);
+        $out = '';
+        foreach (array_chunk($gradeItems, max(1, $perLine)) as $line) {
+            $out .= '<div class="pf-grade-line">' . implode('<span class="sep">|</span>', $line) . '</div>';
+        }
+        $html .= '<div class="pf-grades">' . $out . '</div>';
+    }
 
     // E. Maagizo
     $html .= '<div class="pf-sec"><span class="k">E.</span>Maagizo</div>';
@@ -524,13 +558,13 @@ function render_student_report(array $d, array $c, array $opt = []) {
     $stName = strtoupper(trim((string)($ri['subject_teacher'] ?? '')));
     $hmName = strtoupper(trim((string)($ri['headmaster'] ?? ($hm['full_name'] ?? ''))));
     $hmPhone = trim((string)($ri['head_phone'] ?? ($hm['phone'] ?? '')));
-    $html .= '<div class="pf-line"><b class="lbl">Jina la mwalimu wa taaluma:</b> <span class="pf-dot" style="min-width:200px">' . h($stName !== '' ? $stName : ' ') . '</span>'
+    $html .= '<div class="pf-line"><b class="lbl">Mwalimu wa Taaluma:</b> <span class="pf-dot" style="min-width:200px">' . h($stName !== '' ? $stName : ' ') . '</span>'
           .  ' &nbsp; <b class="lbl">Simu:</b> <span class="pf-dot" style="min-width:130px">' . h(trim((string)($ri['subject_phone'] ?? '')) ?: ' ') . '</span></div>';
-    $html .= '<div class="pf-line"><b class="lbl">Maoni ya Mwalimu wa Taaluma:</b> ' . ($rmk['subject_teacher'] !== '' ? h($rmk['subject_teacher']) : '<span class="pf-fill"></span>') . '</div>';
-    $html .= '<div class="pf-line" style="margin-top:7px"><b class="lbl">Jina la Mwalimu Mkuu wa Shule:</b> <span class="pf-dot" style="min-width:200px">'
+    $html .= '<div class="pf-line"><b class="lbl">Maoni:</b> ' . ($rmk['subject_teacher'] !== '' ? h($rmk['subject_teacher']) : '<span class="pf-fill"></span>') . '</div>';
+    $html .= '<div class="pf-line" style="margin-top:7px"><b class="lbl">Mkuu wa Shule:</b> <span class="pf-dot" style="min-width:200px">'
           .  h($hmName !== '' ? $hmName : ' ') . '</span>'
           .  ' &nbsp; <b class="lbl">Simu:</b> <span class="pf-dot" style="min-width:130px">' . h($hmPhone !== '' ? $hmPhone : ' ') . '</span></div>';
-    $html .= '<div class="pf-line"><b class="lbl">Maoni ya Mwalimu Mkuu wa Shule:</b> ' . ($rmk['headmaster'] !== '' ? h($rmk['headmaster']) : '<span class="pf-fill"></span>') . '</div>';
+    $html .= '<div class="pf-line"><b class="lbl">Maoni:</b> ' . ($rmk['headmaster'] !== '' ? h($rmk['headmaster']) : '<span class="pf-fill"></span>') . '</div>';
     // Muhuri wa shule na sahihi ya mkuu wa shule
     $stampSrc = report_branding_src($brand['stamp'] ?? '');
     $sigSrc = report_branding_src($brand['signature'] ?? '');
@@ -549,7 +583,7 @@ function render_student_report(array $d, array $c, array $opt = []) {
 
 function page_shell($title, $inner, $autoprint = false, $landscape = true) {
     return '<!DOCTYPE html><html lang="sw"><head><meta charset="UTF-8"><title>' . h($title) . '</title>'
-        . '<style>@page{size:A4 ' . ($landscape ? 'landscape' : 'portrait') . ';margin:10mm;border:2px solid #12314f;background:#F5F5DC;@bottom-left{content:"Page " counter(page) " of " counter(pages);font-size:10px;font-weight:bold;color:#12314f}}body{margin:0;background:#F5F5DC}.ng-doc{border:none!important}@media print{.no-print{display:none!important}body{margin:0;padding:0}}</style></head><body>'
+        . '<style>@page{size:A4 ' . ($landscape ? 'landscape' : 'portrait') . ';margin:10mm;border:2px solid #12314f;background:#fff;@bottom-left{content:"Page " counter(page) " of " counter(pages);font-size:10px;font-weight:bold;color:#12314f}}body{margin:0;background:#fff}.ng-doc{border:none!important}@media print{.no-print{display:none!important}body{margin:0;padding:0}}</style></head><body>'
         . $inner . ($autoprint ? '<script>window.onload=function(){window.print()}</script>' : '') . '</body></html>';
 }
 

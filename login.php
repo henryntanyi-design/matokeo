@@ -8,16 +8,10 @@ if (is_post()) {
     $id = trim($_POST['identifier'] ?? ''); $pw = (string)($_POST['secret'] ?? '');
     $fail = 'Invalid login details.';
     if ($tab === 'staff') {
-        /* Cheque Number (users.username) is the normal login; email is accepted too (e.g. super admin). */
         $u = q_one('SELECT * FROM users WHERE username = ? AND active = 1', [$id]);
-        if (!$u && $id !== '') {
-            $u = q_one('SELECT * FROM users WHERE email = ? AND active = 1 ORDER BY id LIMIT 1', [$id]);
-        }
+        if (!$u && $id !== '') { $u = q_one('SELECT * FROM users WHERE email = ? AND active = 1 ORDER BY id LIMIT 1', [$id]); }
         if (!$u) {
-            if ($id !== '') {
-                $off = q_one('SELECT active FROM users WHERE username = ? OR email = ? ORDER BY active DESC LIMIT 1', [$id, $id]);
-                if ($off && !(int)$off['active']) $err = 'Your account has been disabled. Contact your school administrator.';
-            }
+            if ($id !== '') { $off = q_one('SELECT active FROM users WHERE username = ? OR email = ? ORDER BY active DESC LIMIT 1', [$id, $id]); if ($off && !(int)$off['active']) $err = 'Your account has been disabled. Contact your school administrator.'; }
             if ($err === '') { usleep(400000); $err = $fail; }
         } elseif ($u['locked_until'] && strtotime($u['locked_until']) > time()) $err = 'Account temporarily locked. Try again after 15 minutes.';
         elseif ($u['role'] !== 'super' && !(int)q_val('SELECT active FROM schools WHERE id = ?', [(int)$u['school_id']])) $err = 'Your school has been disabled. Contact your district office.';
@@ -32,12 +26,7 @@ if (is_post()) {
         }
     } else {
         $sch = (int)($_POST['school_id'] ?? 0);
-        /* Mwanafunzi huingia kwa Index No / Candidate No (exam_candidates.cand_no); admission_no inakubaliwa kama akiba. */
-        $s = q_one("SELECT st.* FROM students st
-                    JOIN schools sc ON sc.id = st.school_id AND sc.active = 1
-                    JOIN exam_candidates ec ON ec.student_id = st.id AND ec.school_id = st.school_id
-                    WHERE st.school_id = ? AND (ec.cand_no = ? OR st.admission_no = ?) AND st.status <> 'inactive'
-                    ORDER BY ec.id DESC LIMIT 1", [$sch, $id, $id]);
+        $s = q_one("SELECT st.* FROM students st JOIN schools sc ON sc.id = st.school_id AND sc.active = 1 JOIN exam_candidates ec ON ec.student_id = st.id AND ec.school_id = st.school_id WHERE st.school_id = ? AND (ec.cand_no = ? OR st.admission_no = ?) AND st.status <> 'inactive' ORDER BY ec.id DESC LIMIT 1", [$sch, $id, $id]);
         if ($s && $s['pin_locked_until'] && strtotime($s['pin_locked_until']) > time()) $err = 'Account temporarily locked. Try again after 15 minutes.';
         elseif ($s && $s['pin_hash'] && password_verify($pw, $s['pin_hash'])) {
             q('UPDATE students SET pin_failed = 0, pin_locked_until = NULL WHERE id = ?', [$s['id']]);
@@ -49,161 +38,174 @@ if (is_post()) {
         }
     }
 }
-?><!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign in - <?php echo h(APP_NAME); ?></title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--brand:#0b3d91;--brand2:#2c6ed5;--brand3:#0f9d6b;--ink:#16203a;--mut:#6b7a90;--line:#e2e9f6}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px;
-  font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--ink);
-  background:
-    radial-gradient(900px 520px at 6% -10%,rgba(44,110,213,.22),transparent 60%),
-    radial-gradient(760px 480px at 104% 108%,rgba(15,157,107,.20),transparent 58%),
-    linear-gradient(160deg,#f5f8ff 0%,#eef3fb 55%,#e8f6f0 100%);}
-body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:radial-gradient(rgba(11,61,145,.07) 1px,transparent 1px);background-size:22px 22px;
-  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.6),transparent 72%);mask-image:linear-gradient(to bottom,rgba(0,0,0,.6),transparent 72%)}
-.lg-wrap{position:relative;width:100%;max-width:1000px;animation:lgIn .55s cubic-bezier(.22,.9,.3,1) both}
-@keyframes lgIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
-.lg-card{position:relative;display:flex;flex-wrap:wrap;overflow:hidden;background:#fff;border-radius:24px;
-  box-shadow:0 30px 70px -22px rgba(11,61,145,.35),0 2px 8px rgba(11,61,145,.06);border:1px solid rgba(11,61,145,.07)}
-.lg-card:before{content:"";position:absolute;inset:0 0 auto;height:4px;z-index:3;
-  background:linear-gradient(90deg,var(--brand),var(--brand2) 45%,var(--brand3))}
-.lg-brand{flex:1 1 330px;min-width:290px;padding:40px 34px;color:#fff;position:relative;overflow:hidden;
-  background:linear-gradient(155deg,#0a3a89 0%,#14479e 42%,#2c6ed5 100%);display:flex;flex-direction:column;justify-content:space-between;gap:22px}
-.lg-brand:before{content:"";position:absolute;right:-30%;top:-40%;width:420px;height:420px;border-radius:50%;
-  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.20),transparent 62%);animation:lgFloat 14s ease-in-out infinite}
-.lg-brand:after{content:"";position:absolute;left:-90px;bottom:-110px;width:300px;height:300px;border-radius:50%;
-  background:rgba(15,157,107,.35);filter:blur(8px);animation:lgFloat 18s ease-in-out infinite reverse}
-@keyframes lgFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-14px,16px,0)}}
-.lg-brand .z{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px}
-.lg-logo{height:62px;width:auto;max-width:180px;object-fit:contain;background:#fff;border-radius:16px;padding:7px;box-shadow:0 10px 24px rgba(0,0,0,.22)}
-.lg-title{font-size:1.5rem;font-weight:800;line-height:1.22;letter-spacing:-.01em}
-.lg-sub{font-size:.85rem;opacity:.9;line-height:1.6;max-width:34ch}
-.lg-feat{list-style:none;padding:0;margin:4px 0 0;font-size:.83rem;display:grid;gap:11px}
-.lg-feat li{display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);animation:lgFadeIn .5s ease both}
-.lg-feat li:nth-child(1){animation-delay:.12s}
-.lg-feat li:nth-child(2){animation-delay:.24s}
-.lg-feat li:nth-child(3){animation-delay:.36s}
-@keyframes lgFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.lg-feat i{flex:0 0 27px;height:27px;border-radius:9px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.16);display:inline-flex;align-items:center;justify-content:center;font-size:.82rem;transition:box-shadow .25s,background .2s,transform .2s}
-.lg-feat li:hover i{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35);box-shadow:0 6px 18px -10px rgba(255,255,255,.35),0 1px 3px rgba(255,255,255,.12);transform:translateY(-1px)}
-.lg-note{font-size:.72rem;color:rgba(255,255,255,.72);letter-spacing:.02em}
-.lg-h-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.lg-h-title{font-size:.92rem;font-weight:700;color:#fff;letter-spacing:-.01em}
-.lg-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5b5b;margin-right:8px;box-shadow:0 0 0 3px rgba(255,91,91,.25);animation:lgPulse 2s infinite}
-@keyframes lgPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(255,91,91,.25)}50%{transform:scale(1.15);box-shadow:0 0 0 6px rgba(255,91,91,.15)}}
-.lg-home-btn{border:1px solid rgba(255,255,255,.55);color:#fff;font-weight:600;font-size:.82rem;padding:.52rem .9rem;border-radius:999px;transition:background .2s,border-color .2s,transform .2s}
-.lg-home-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.85);color:#fff;transform:translateY(-1px)}
-.lg-form{flex:1 1 400px;padding:40px 38px 28px;position:relative;z-index:1}
-.lg-badge{display:inline-flex;align-items:center;gap:6px;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:#1b7f4b;background:#eaf7f0;border:1px solid #cfeee0;border-radius:999px;padding:4px 10px;margin-bottom:14px}
-.lg-h{font-size:1.35rem;font-weight:800;color:var(--brand);letter-spacing:-.01em;margin:0 0 4px}
-.lg-p{font-size:.85rem;color:var(--mut);margin:0 0 20px}
-.lg-tabs{display:flex;gap:4px;background:#eef3fb;border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:20px}
-.lg-tabs a{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border-radius:10px;
-  font-size:.8rem;font-weight:700;text-decoration:none;color:#5b6b85;transition:background .18s,color .18s,box-shadow .18s}
-.lg-tabs a:hover{color:var(--brand);background:rgba(255,255,255,.72)}
-.lg-tabs a.on{background:#fff;color:var(--brand);box-shadow:0 3px 10px rgba(11,61,145,.14)}
-.form-label{font-size:.78rem;font-weight:700;color:#33415c;margin-bottom:5px}
-.input-group-text{background:#f5f8fe;color:var(--brand);border-color:var(--line);padding:.5rem .7rem}
-.ig-lead{border-right:0;border-radius:11px 0 0 11px}
-.ig-tail{border-left:0;border-radius:0 11px 11px 0;padding:0}
-.lg-form .form-control,.lg-form .form-select{border-color:var(--line);border-radius:11px;padding:.64rem .85rem;font-size:.9rem;background:#fdfefe}
-.lg-form .ig-lead+.form-control{border-radius:0 11px 11px 0}
-.lg-form .form-control.ig-in{border-radius:0}
-.lg-form .form-select:focus,.lg-form .form-control:focus{border-color:#8fb4ea;box-shadow:0 0 0 4px rgba(44,110,213,.13)}
-.lg-form .input-group:focus-within .input-group-text{border-color:#8fb4ea;color:var(--brand2)}
-.lg-eye{border:0;background:transparent;color:#8a99b0;width:42px;height:100%;border-radius:0 11px 11px 0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.95rem}
-.lg-eye:hover{color:var(--brand)}
-.lg-btn{background:linear-gradient(135deg,var(--brand2),var(--brand));border:0;border-radius:12px;padding:.74rem;font-weight:700;color:#fff;
-  letter-spacing:.01em;box-shadow:0 12px 26px -8px rgba(11,61,145,.55);transition:transform .16s,box-shadow .16s,filter .16s}
-.lg-btn:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 16px 30px -8px rgba(11,61,145,.6)}
+:root{--ink:#141826;--navy:#0b3d91;--navy-2:#2c6ed5;--gold:#0f9d6b;--paper:#fbfaf7;--paper-2:#f4f1ea;--line:#e6e0d4;--mut:#6f7787}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper-2);background-image:radial-gradient(60% 50% at 10% 0%,rgba(11,61,145,.09),transparent 70%),radial-gradient(50% 55% at 100% 100%,rgba(15,157,107,.10),transparent 70%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;-webkit-font-smoothing:antialiased}
+.lg-shell{width:100%;max-width:1040px;animation:lgIn .6s cubic-bezier(.2,.9,.3,1) both}
+@keyframes lgIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.lg-card{display:grid;grid-template-columns:1.05fr 1fr;background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -40px rgba(11,42,74,.45),0 2px 6px rgba(11,42,74,.05)}
+.lg-aside{position:relative;padding:46px 42px;background:linear-gradient(165deg,#062a6e 0%,#0b3d91 50%,#2c6ed5 100%);color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:26px}
+.lg-aside::before{content:"";position:absolute;inset:-120px -120px auto auto;width:420px;height:420px;border-radius:50%;border:1px solid rgba(194,161,92,.22)}
+.lg-aside::after{content:"";position:absolute;right:-110px;bottom:-140px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(194,161,92,.16),transparent 62%)}
+.lg-aside>*{position:relative;z-index:1}
+.lg-logo{height:54px;width:auto;max-width:170px;object-fit:contain;background:#fff;border-radius:14px;padding:7px;box-shadow:0 10px 26px rgba(0,0,0,.25)}
+.lg-logo-tile{height:54px;width:54px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);font-size:1.5rem;color:var(--gold)}
+.lg-brand-name{margin-top:4px;font-family:"Cormorant Garamond",Georgia,serif;font-size:1.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#ffffff;line-height:1.2;word-break:break-word;text-shadow:0 2px 12px rgba(0,0,0,.35)}
+.lg-brand-sub{margin-top:2px;font-size:.78rem;color:rgba(255,255,255,.62);letter-spacing:.04em}
+.lg-quote{margin:26px 0 10px;font-family:"Cormorant Garamond",Georgia,serif;font-size:1.85rem;font-weight:500;line-height:1.2;letter-spacing:-.01em;color:#fff}
+.lg-about{margin:0;max-width:34ch;font-size:.86rem;line-height:1.65;color:rgba(255,255,255,.72)}
+.lg-gold-rule{width:44px;height:1px;background:var(--gold);margin:22px 0 18px;border:0}
+.lg-points{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.lg-points li{display:flex;align-items:center;gap:12px;font-size:.82rem;color:rgba(255,255,255,.82)}
+.lg-points li::before{content:"";flex:0 0 6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px rgba(194,161,92,.18)}
+.lg-aside-foot{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.lg-main{padding:46px 44px 34px;position:relative}
+.lg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
+.lg-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--navy)}
+.lg-eyebrow i{color:var(--gold)}
+.lg-home{font-size:.8rem;font-weight:500;color:var(--mut);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .2s}
+.lg-home:hover{color:var(--navy)}
+.lg-h{margin:0 0 6px;font-family:"Cormorant Garamond",Georgia,serif;font-size:2.05rem;font-weight:600;line-height:1.1;letter-spacing:-.01em;color:var(--navy)}
+.lg-p{margin:0 0 24px;font-size:.88rem;color:var(--mut);line-height:1.5}
+.lg-tabs{display:flex;gap:4px;background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:22px}
+.lg-tabs a{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border-radius:10px;font-size:.8rem;font-weight:600;text-decoration:none;color:var(--mut);transition:background .18s,color .18s,box-shadow .18s}
+.lg-tabs a:hover{color:var(--navy)}
+.lg-tabs a.on{background:#fff;color:var(--navy);box-shadow:0 3px 10px rgba(11,42,74,.12)}
+.lg-alert{border-radius:12px;font-size:.84rem;border:1px solid #e7c9c9;background:#fdf2f2;color:#7a2b2b;padding:10px 13px;margin-bottom:18px;display:flex;align-items:flex-start;gap:8px}
+.lg-field{margin-bottom:16px}
+.lg-field .form-label{font-size:.74rem;font-weight:600;letter-spacing:.04em;color:var(--ink);margin-bottom:6px}
+.lg-input-group{display:flex;align-items:stretch}
+.lg-input-group .lg-lead{display:inline-flex;align-items:center;justify-content:center;width:44px;flex:0 0 44px;background:var(--paper);border:1px solid var(--line);border-right:0;border-radius:12px 0 0 12px;color:var(--navy);font-size:.95rem}
+.lg-input-group .form-control,.lg-input-group .form-select{border:1px solid var(--line);border-radius:0 12px 12px 0;padding:.68rem .9rem;font-size:.9rem;background:var(--paper);color:var(--ink);height:44px}
+.lg-input-group .form-control.ig-in{border-radius:0}
+.lg-input-group .lg-tail{display:flex;align-items:center;background:var(--paper);border:1px solid var(--line);border-left:0;border-radius:0 12px 12px 0;padding:0 4px}
+.lg-input-group:focus-within .lg-lead,.lg-input-group:focus-within .lg-tail,.lg-input-group:focus-within .form-control,.lg-input-group:focus-within .form-select{border-color:var(--navy-2);box-shadow:0 0 0 4px rgba(11,42,74,.08)}
+.lg-eye{border:0;background:transparent;color:var(--mut);width:36px;height:36px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;transition:color .15s,background .15s}
+.lg-eye:hover{color:var(--navy);background:rgba(11,42,74,.06)}
+.lg-btn{background:linear-gradient(135deg,var(--navy-2),var(--navy));border:0;border-radius:12px;padding:.78rem 1rem;font-weight:600;font-size:.9rem;color:#fff;letter-spacing:.02em;box-shadow:0 12px 26px -10px rgba(11,42,74,.55);transition:transform .16s,box-shadow .16s,filter .16s;height:46px}
+.lg-btn:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 16px 30px -10px rgba(11,42,74,.6)}
 .lg-btn:active{transform:none}
 .lg-links{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:18px;flex-wrap:wrap;font-size:.8rem}
-.lg-links a{text-decoration:none;font-weight:600;transition:color .15s}
-.lg-links a.text-muted:hover{color:var(--brand)!important}
-.lg-foot{text-align:center;font-size:.72rem;color:#8a99b0;margin-top:20px;padding-top:14px;border-top:1px dashed var(--line)}
-.alert{border-radius:12px;font-size:.82rem;border-color:#f3c9cf;background:#fdf2f4}
-@media (max-width:767px){
-  body{padding:16px 12px;align-items:flex-start}
-  .lg-card{border-radius:20px}
-  .lg-brand{padding:26px 22px;gap:14px}
-  .lg-feat{display:none}
-  .lg-form{padding:26px 22px 20px}
-  .lg-h{font-size:1.2rem}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}.lg-btn,.lg-links a{transition:none}}
-</style></head>
+.lg-links a{text-decoration:none;font-weight:500;transition:color .15s}
+.lg-links a.text-muted:hover{color:var(--navy)!important}
+.lg-link-accent{color:var(--navy);font-weight:600;text-decoration:none;transition:color .15s}
+.lg-link-accent:hover{color:var(--gold)}
+.lg-foot{text-align:center;font-size:.72rem;color:var(--mut);margin-top:22px;padding-top:16px;border-top:1px dashed var(--line);letter-spacing:.04em}
+@media (max-width:860px){.lg-card{grid-template-columns:1fr}.lg-aside{padding:26px 24px;gap:14px}.lg-quote{font-size:1.35rem;margin:14px 0 6px}.lg-about,.lg-gold-rule,.lg-points{display:none}.lg-main{padding:26px 22px 22px}.lg-h{font-size:1.7rem}}
+@media (prefers-reduced-motion:reduce){.lg-shell,.lg-shell *{animation:none!important}.lg-btn,.lg-links a{transition:none}}
+</style>
+</head>
 <body>
 <?php
 $logo_url = function_exists('setting') ? setting('school_logo') : '';
 $nat = function_exists('national_logo_src') ? national_logo_src() : '';
 $showLogo = $logo_url !== '' ? $logo_url : $nat;
 ?>
-<div class="lg-wrap">
+<div class="lg-shell">
   <div class="lg-card">
-    <aside class="lg-brand">
-      <div class="z">
-        <?php if ($showLogo !== ''): ?><img src="<?php echo h($showLogo); ?>" alt="Logo" class="lg-logo"><?php endif; ?>
-        <div>
-          <div class="lg-title"><?php echo h(system_name()); ?></div>
-          <div class="lg-sub mt-2">Results management system, progress reports and student records.</div>
-          <div class="mt-3">
-            <div class="lg-h-row">
-              <div class="lg-h-title">Welcome <span class="lg-dot"></span></div>
-              <a class="lg-home-btn" href="<?php echo h(url('index.php')); ?>"><i class="bi bi-house-door me-1"></i>Home</a>
-            </div>
-          </div>
-        </div>
-        <ul class="lg-feat">
-          <li><i class="bi bi-bar-chart-line"></i> Results and subject analysis</li>
-          <li><i class="bi bi-file-earmark-text"></i> Progress reports (PDF)</li>
-          <li><i class="bi bi-shield-check"></i> Secure school records</li>
+    <aside class="lg-aside">
+      <div>
+        <div class="lg-brand-name"><?php echo h(strtoupper(system_name())); ?></div>
+        <div class="lg-brand-sub">Results management system</div>
+        <h2 class="lg-quote">Clarity for every classroom.</h2>
+        <p class="lg-about">Progress reports, subject analysis and secure school records, all in one place.</p>
+        <hr class="lg-gold-rule">
+        <ul class="lg-points">
+          <li>Results and subject analysis</li>
+          <li>Progress reports (PDF)</li>
+          <li>Secure school records</li>
         </ul>
       </div>
-      <div class="z lg-note"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?></div>
+      <div class="lg-aside-foot"><?php echo h(strtoupper(date('Y'))); ?> &middot; <?php echo h(APP_NAME); ?></div>
     </aside>
 
-    <main class="lg-form">
-      <span class="lg-badge"><i class="bi bi-shield-lock"></i> Secure sign-in</span>
-      <div class="lg-h">Welcome back</div>
-      <div class="lg-p"><?php echo $tab === 'staff' ? 'Sign in as Staff' : 'Sign in as Student'; ?></div>
+    <main class="lg-main">
+      <div class="lg-top">
+        <span class="lg-eyebrow"><i class="bi bi-shield-check"></i> Secure sign-in</span>
+        <a class="lg-home" href="<?php echo h(url('index.php')); ?>"><i class="bi bi-house-door"></i> Home</a>
+      </div>
+      <h1 class="lg-h">Welcome back</h1>
+      <p class="lg-p"><?php echo $tab === 'staff' ? 'Sign in to your staff dashboard.' : 'Sign in to view your results.'; ?></p>
 
       <div class="lg-tabs">
-        <a href="?t=staff" class="<?php echo $tab === 'staff' ? 'on' : ''; ?>"><i class="bi bi-person-workspace me-1"></i>Staff</a>
-        <a href="?t=student" class="<?php echo $tab === 'student' ? 'on' : ''; ?>"><i class="bi bi-mortarboard me-1"></i>Student</a>
+        <a href="?t=staff" class="<?php echo $tab === 'staff' ? 'on' : ''; ?>"><i class="bi bi-person-workspace"></i> Staff</a>
+        <a href="?t=student" class="<?php echo $tab === 'student' ? 'on' : ''; ?>"><i class="bi bi-mortarboard"></i> Student</a>
       </div>
 
-      <?php flash_show(); if ($err): ?><div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle me-1"></i><?php echo h($err); ?></div><?php endif; ?>
-      <form method="post"><?php echo csrf_field(); ?><input type="hidden" name="type" value="<?php echo h($tab); ?>">
-      <?php if ($tab === 'student'): ?>
-      <div class="row g-3 mb-3">
-        <div class="col-md-6">
-          <label class="form-label">School</label>
-          <select name="school_id" class="form-select" required><option value="">-- select school --</option><?php foreach (q_all('SELECT id, name FROM schools WHERE active = 1 ORDER BY name') as $sc) echo '<option value="' . (int)$sc['id'] . '"' . ((int)($_POST['school_id'] ?? 0) === (int)$sc['id'] ? ' selected' : '') . '>' . h($sc['name']) . '</option>'; ?></select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="identifier">Index No / Candidate No</label>
-          <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-person-badge"></i></span><input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username"></div>
-        </div>
-      </div>
-      <?php else: ?>
-      <div class="mb-3"><label class="form-label" for="identifier">Cheque Number / Email</label>
-        <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-person-badge"></i></span><input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username" placeholder="e.g. 1234567"></div></div>
+      <?php flash_show(); if ($err): ?>
+        <div class="lg-alert"><i class="bi bi-exclamation-triangle"></i><span><?php echo h($err); ?></span></div>
       <?php endif; ?>
-      <div class="mb-3"><label class="form-label" for="secret"><?php echo $tab === 'staff' ? 'Password' : 'PIN'; ?></label>
-        <div class="input-group"><span class="input-group-text ig-lead"><i class="bi bi-lock"></i></span><input name="secret" id="secret" type="password" class="form-control ig-in" required autocomplete="current-password"><span class="input-group-text ig-tail"><button type="button" class="lg-eye" data-for="secret" aria-label="Show password"><i class="bi bi-eye"></i></button></span></div></div>
-      <button class="btn btn-primary w-100 lg-btn"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in</button></form>
+
+      <form method="post">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" name="type" value="<?php echo h($tab); ?>">
+        <?php if ($tab === 'student'): ?>
+          <div class="row g-3 mb-1">
+            <div class="col-md-6">
+              <div class="lg-field">
+                <label class="form-label" for="school_id">School</label>
+                <div class="lg-input-group">
+                  <span class="lg-lead"><i class="bi bi-building"></i></span>
+                  <select name="school_id" id="school_id" class="form-select" required>
+                    <option value="">-- select school --</option>
+                    <?php foreach (q_all('SELECT id, name FROM schools WHERE active = 1 ORDER BY name') as $sc) echo '<option value="' . (int)$sc['id'] . '"' . ((int)($_POST['school_id'] ?? 0) === (int)$sc['id'] ? ' selected' : '') . '>' . h($sc['name']) . '</option>'; ?>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="lg-field">
+                <label class="form-label" for="identifier">Index No / Candidate No</label>
+                <div class="lg-input-group">
+                  <span class="lg-lead"><i class="bi bi-person-badge"></i></span>
+                  <input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username">
+                </div>
+              </div>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="lg-field">
+            <label class="form-label" for="identifier">Cheque Number / Email</label>
+            <div class="lg-input-group">
+              <span class="lg-lead"><i class="bi bi-person-badge"></i></span>
+              <input name="identifier" id="identifier" class="form-control" required autofocus autocomplete="username" placeholder="e.g. 1234567">
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <div class="lg-field">
+          <label class="form-label" for="secret"><?php echo $tab === 'staff' ? 'Password' : 'PIN'; ?></label>
+          <div class="lg-input-group">
+            <span class="lg-lead"><i class="bi bi-lock"></i></span>
+            <input name="secret" id="secret" type="password" class="form-control ig-in" required autocomplete="current-password">
+            <span class="lg-tail">
+              <button type="button" class="lg-eye" data-for="secret" aria-label="Show password"><i class="bi bi-eye"></i></button>
+            </span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-100 lg-btn"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in</button>
+      </form>
 
       <div class="lg-links">
         <?php if ($tab === 'staff'): ?>
           <a href="forgot.php" class="text-muted"><i class="bi bi-key me-1"></i>Forgot password?</a>
-          <a href="?t=student" class="text-primary">Sign in as Student <i class="bi bi-arrow-right-short"></i></a>
+          <a href="?t=student" class="lg-link-accent">Sign in as Student <i class="bi bi-arrow-right-short"></i></a>
         <?php else: ?>
           <span class="text-muted"><i class="bi bi-info-circle me-1"></i>Forgot your PIN? See your admin.</span>
-          <a href="?t=staff" class="text-primary">Staff <i class="bi bi-arrow-right-short"></i></a>
+          <a href="?t=staff" class="lg-link-accent">Staff <i class="bi bi-arrow-right-short"></i></a>
         <?php endif; ?>
       </div>
       <div class="lg-foot">&copy; <?php echo h(date('Y')); ?> <?php echo h(APP_NAME); ?></div>
@@ -222,4 +224,5 @@ document.querySelectorAll('.lg-eye').forEach(function (b) {
   });
 });
 </script>
-</body></html>
+</body>
+</html>

@@ -29,9 +29,8 @@ foreach ($countBag as $cid => $n) {
     $classStreamCount[(int)$cid] = max(0, min(TTA_MAX_STREAMS, (int)$n));
 }
 
-$streamSuggestions = teaching_stream_options($school_id);
-$fStreamsRaw = trim((string)($_POST['streams'] ?? $_GET['streams'] ?? ''));
-$providedLabels = tt_normalize_streams($fStreamsRaw);
+// Majina ya mikondo hupangwa kiotomatiki: A, B, C...
+$providedLabels = [];
 
 // Mpango wa kila darasa: automatic (0) au idadi iliyowekwa kwa mkono.
 $classPlans = [];
@@ -126,14 +125,18 @@ if ($isPost) {
 
 /* ---------------- Uzalishaji ---------------- */
 
-if (is_post()) {
-    csrf_check();
+if (is_post()) csrf_check();
+
+// "Apply streams" hujenga upya fomu pekee ili visanduku vya vipindi kwa kila
+// stream vionekane; ratiba hazizalishwi hadi mtumiaji abofye Create Timetable.
+if (is_post() && (($_POST['action'] ?? '') !== 'apply')) {
     // Mikondo ya kila darasa inaingizwa kwa mpangilio wa $labelPool (A, B, C...).
     $input = $_POST;
     $input['streams'] = $labelPool;
     // Tumia maadili yaliyoonyeshwa kwenye fomu (defaults za kila stream
     // zimekwisha kujazwa), si maadili ghafi ya POST pekee.
     $input['required'] = $reqValues;
+    $input['class_streams'] = $classStreams;
     $check = tt_validate_input($input, $school_id);
     $data = $check['data'];
     $errors = $check['errors'];
@@ -317,10 +320,15 @@ teaching_nav('timetable');
           </tbody>
         </table>
       </div>
-      <div class="form-text">
-        Set the number of streams for each class yourself &mdash; every class may differ, and there is no limit on students per stream.
-        0 follows the streams recorded on the students (whole class if none).
-        The numbers above apply as soon as you click <b>Create Timetable</b>: the period table below and the generated timetable use them.
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="form-text mb-0">
+          Set the number of streams for each class yourself &mdash; every class may differ, and there is no limit on students per stream.
+          0 follows the streams recorded on the students (whole class if none).
+          Click <b>Apply streams</b> to show a period box for each stream below, then fill the periods per stream.
+        </div>
+        <button type="submit" name="action" value="apply" class="btn btn-sm btn-outline-primary flex-shrink-0">
+          <i class="bi bi-arrow-repeat"></i> Apply streams
+        </button>
       </div>
     </div>
   </div>
@@ -344,17 +352,6 @@ teaching_nav('timetable');
         <div class="col-6 col-lg-3">
           <label class="form-label small fw-bold mb-1">End time</label>
           <input type="time" name="end_time" class="form-control form-control-sm" required value="<?php echo h($fEnd); ?>">
-        </div>
-        <div class="col-12 col-lg-8">
-          <label class="form-label small fw-bold mb-1">Stream names (optional)</label>
-          <input type="text" name="streams" class="form-control form-control-sm" list="ttStreamOptions" maxlength="240" value="<?php echo h($fStreamsRaw); ?>" placeholder="Example: A, B (leave empty to split from enrolment)">
-          <datalist id="ttStreamOptions">
-            <?php foreach ($streamSuggestions as $st): ?><option value="<?php echo h($st); ?>"><?php endforeach; ?>
-          </datalist>
-          <div class="form-text">
-            Leave the names empty to use A, B, C... Each class uses as many names as its own stream count above.
-            Every stream gets its own timetable rows (for example: Form I A, Form I B).
-          </div>
         </div>
         <div class="col-6 col-lg-3">
           <div class="form-check mt-3">
@@ -456,7 +453,7 @@ teaching_nav('timetable');
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead>
-            <tr><th style="width:50px">S/N</th><th>Class</th><th>Subject</th><th>Teacher</th><th style="width:120px">Periods (each stream)</th></tr>
+            <tr><th style="width:50px">S/N</th><th>Class</th><th>Subject</th><th>Teacher</th><th style="width:170px">Periods per week (each stream)</th></tr>
           </thead>
           <tbody>
             <?php $sn = 0; foreach ($classMap as $cid => $c): $cid = (int)$cid; ?>
@@ -470,26 +467,52 @@ teaching_nav('timetable');
                   <?php endif; ?>
                 </td>
                 <td class="fw-bold text-center">
-                  <span data-class-total="<?php echo h($tkey); ?>">0</span> / <?php echo (int)$capacity; ?>
+                  <?php if (count($streamsOfClass) > 1): ?>
+                    <div class="small">
+                      <?php foreach ($streamsOfClass as $stream): ?>
+                        <span class="d-inline-block me-2"><?php echo h($stream); ?>:
+                          <span data-class-total="<?php echo h($tkey . $stream); ?>">0</span> / <?php echo (int)$capacity; ?></span>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php else: ?>
+                    <span data-class-total="<?php echo h($tkey); ?>">0</span> / <?php echo (int)$capacity; ?>
+                  <?php endif; ?>
                 </td>
               </tr>
-              <?php foreach ($subs as $s): $sn++; $sid = (int)$s['id']; $val = (int)($reqValues[$cid][$sid][0] ?? 0); $names = []; $missing = false; ?>
+              <?php foreach ($subs as $s): $sn++; $sid = (int)$s['id']; $val = (int)($reqValues[$cid][$sid][0] ?? 0); $names = []; $missing = false; $missingStreams = []; ?>
                 <?php foreach ($streamsOfClass as $stream): $assigned = tt_assignment_for($assignMap, $cid, $sid, (string)$stream);
-                      if ($assigned) $names[(string)$assigned['full_name']] = true; else $missing = true; endforeach; ?>
+                      if ($assigned) $names[(string)$assigned['full_name']] = true; else { $missing = true; $missingStreams[] = (string)$stream; } endforeach; ?>
+                <?php $missingLabel = 'No teacher';
+                      if ($missingStreams && count($streamsOfClass) > 1) {
+                          $missingLabel .= ' (' . implode(', ', array_filter($missingStreams, 'strlen')) . ')';
+                      } ?>
                 <tr>
                   <td class="text-muted"><?php echo $sn; ?></td>
                   <td><?php echo h($c['name']); ?></td>
                   <td><?php echo h($s['name']); ?><?php echo trim((string)($s['abbr'] ?? '')) !== '' ? ' <span class="text-muted small">(' . h($s['abbr']) . ')</span>' : ''; ?></td>
                   <td class="small">
                     <?php if (!$names): ?>
-                      <span class="badge text-bg-warning">No teacher</span>
+                      <span class="badge text-bg-warning"><?php echo h($missingLabel); ?></span>
                     <?php else: ?>
                       <?php echo h(implode(' &middot; ', array_keys($names))); ?>
-                      <?php if ($missing): ?> <span class="badge text-bg-warning">No teacher</span><?php endif; ?>
+                      <?php if ($missing): ?> <span class="badge text-bg-warning"><?php echo h($missingLabel); ?></span><?php endif; ?>
                     <?php endif; ?>
                   </td>
                   <td>
-                    <input type="number" name="required[<?php echo $cid; ?>][<?php echo $sid; ?>]" class="form-control form-control-sm tt-req-input" data-class="<?php echo h($tkey); ?>" min="0" max="100" value="<?php echo $val; ?>">
+                    <?php if (count($streamsOfClass) > 1): ?>
+                      <div class="d-flex flex-wrap gap-1">
+                        <?php foreach ($streamsOfClass as $si => $stream): $sval = (int)($reqValues[$cid][$sid][$si] ?? 0); ?>
+                          <label class="d-inline-flex align-items-center gap-1 mb-0" title="Periods per week for <?php echo h($stream !== '' ? $stream : $c['name']); ?>">
+                            <span class="text-muted small"><?php echo h($stream !== '' ? $stream : 'All'); ?></span>
+                            <input type="number" name="required[<?php echo $cid; ?>][<?php echo $sid; ?>][<?php echo (int)$si; ?>]"
+                                   class="form-control form-control-sm tt-req-input" data-class="<?php echo h($tkey . $stream); ?>"
+                                   min="0" max="100" value="<?php echo $sval; ?>" style="width:68px">
+                          </label>
+                        <?php endforeach; ?>
+                      </div>
+                    <?php else: ?>
+                      <input type="number" name="required[<?php echo $cid; ?>][<?php echo $sid; ?>]" class="form-control form-control-sm tt-req-input" data-class="<?php echo h($tkey); ?>" min="0" max="100" value="<?php echo $val; ?>">
+                    <?php endif; ?>
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -497,7 +520,7 @@ teaching_nav('timetable');
           </tbody>
         </table>
       </div>
-      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). One number applies to every stream of that class: if you enter 5 for Mathematics, stream A and stream B each get 5 periods. The total for each stream must not exceed the available slots; set 0 for a subject you do not want.
+      <div class="text-muted small mt-2">Defaults follow the official curriculum (Kidato cha I–II and III–IV). A class with one stream has one number. A class with several streams (for example Science and Arts) has a number for each stream, so Science can take Physics, Chemistry and Biology while Arts takes History, Geography and Literature &mdash; set 0 to drop a subject from that stream. The total for each stream must not exceed the available slots.
         One teacher may teach the same subject in every stream &mdash; the generator never puts that teacher in two streams at the same time.</div>
     </div>
   </div>

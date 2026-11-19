@@ -43,21 +43,27 @@ function layout_start($title, $active = '', $pageLabel = null) {
     $whoIni = $words && $words[0] !== '' ? strtoupper($ch($words[0]) . (count($words) > 1 ? $ch(end($words)) : '')) : '';
     $items = nav_items();
     $sc = active_school();
-    /* Kifupi cha jina la mfumo kwa topbar ya simu: huichukua herufi zilizo kwenye mabano, mf. "... (OASIS)". */
+    /* Kifupi cha jina la mfumo: huichukua herufi zilizo kwenye mabano, mf. "... (OASIS)". */
     $appName = system_name();
     $appShort = $appName;
     if (preg_match('/\(([^)]{2,14})\)\s*$/', $appName, $mm)) $appShort = strtoupper(trim($mm[1]));
+    /* Brand: jina la shule + "Secondary School" (muted); bila shule, jina la mfumo. */
+    list($brandName, $brandSub) = $sc ? school_brand_parts($sc) : ['', ''];
+    if ($brandName === '') { $brandName = $appShort; $brandSub = ''; }
+    $brandLogo = $sc ? school_logo_src($sc) : '';
     ?><!DOCTYPE html>
 <html lang="sw"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboards | OASIS</title>
+<title><?php echo h($brandName); ?> | Dashboards</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 body{background:#f3f5fb}
 .side{width:250px;min-height:100vh;background:linear-gradient(180deg,#0b3d91 0%,#07285f 100%);position:fixed;top:0;left:0;z-index:100;box-shadow:2px 0 12px rgba(7,40,95,.18)}
 .side .brand{padding:18px 20px;color:#fff;font-weight:700;font-size:0.8rem;background:rgba(0,0,0,.16);line-height:1.3;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
-.side .brand img{width:46px;height:46px;object-fit:contain;background:transparent;border-radius:0;padding:0;flex:0 0 auto}
-.side .brand .brand-text{min-width:0;font-size:.76rem}
+.side .brand .brand-icon{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2)}
+.side .brand .brand-logo{flex:0 0 auto;width:34px;height:34px;object-fit:contain;border-radius:9px;background:#fff;padding:2px}
+.side .brand .brand-text{min-width:0;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .brand .brand-name{font-weight:800;font-size:.95rem;letter-spacing:.06em;color:#fff}
 .side .nav-link{color:rgba(255,255,255,.85);padding:10px 20px;display:flex;gap:10px;align-items:center;border-left:3px solid transparent;transition:background .15s ease,border-color .15s ease}
 .side .nav-link:hover{background:rgba(255,255,255,.1);color:#fff}
 .side .nav-link.active{background:rgba(255,255,255,.16);color:#fff;border-left-color:#ffc107;font-weight:600}
@@ -66,17 +72,20 @@ body{background:#f3f5fb}
 .topbar-brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto;overflow:hidden}
 .topbar-text{min-width:0;flex:1 1 auto;overflow:hidden}
 .topbar-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#0b3d91,#2c6ed5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.25)}
-.topbar-logo{width:46px;height:46px;object-fit:contain;border-radius:12px;background:transparent;padding:0;flex:0 0 auto;box-shadow:0 4px 10px rgba(11,61,145,.18)}
-.topbar-title{font-weight:800;color:#0b3d91;font-size:1.42rem;line-height:1.05;letter-spacing:.055em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.topbar-sub{font-size:.76rem;color:#6c757d;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.topbar .brand-icon{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem;color:#fff;background:linear-gradient(135deg,#0b3d91,#2c6ed5);box-shadow:0 4px 10px rgba(11,61,145,.25)}
+.topbar .brand-logo{flex:0 0 auto;width:38px;height:38px;object-fit:contain;border-radius:10px;background:#fff;padding:2px;box-shadow:0 4px 10px rgba(11,61,145,.18)}
+.topbar-title{font-weight:800;color:#0b3d91;font-size:.85rem;line-height:1.2;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-sub{font-size:.85rem;color:#0b3d91;line-height:1.2;white-space:nowrap;font-weight:800;margin-left:8px}
 .topbar-page{font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:#6c757d;font-weight:600}
 .topbar-menu{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;padding:0;border:1px solid #dbe4f4;border-radius:11px;background:#f5f8ff;color:#0b3d91;font-size:1.25rem;line-height:1;transition:background .15s ease,border-color .15s ease}
 .topbar-menu:hover{background:#e9f0ff;border-color:#b9d0f0}
 .topbar-menu:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(44,110,213,.16)}
 .offcanvas.main-nav{width:min(272px,84vw);border:0;background:linear-gradient(180deg,#0b3d91 0%,#07285f 100%);color:#fff}
 .main-nav .offcanvas-header{padding:14px 16px;gap:10px;background:rgba(0,0,0,.16);border-bottom:1px solid rgba(255,255,255,.12)}
-.main-nav .offcanvas-title{color:#fff;font-weight:700;font-size:.8rem;line-height:1.3;white-space:normal}
-.main-nav .topbar-logo{width:40px;height:40px;padding:0;background:transparent;box-shadow:none}
+.main-nav .offcanvas-title{color:#fff;font-weight:800;font-size:.8rem;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.main-nav .brand-icon{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2)}
+.main-nav .brand-logo{flex:0 0 auto;width:34px;height:34px;object-fit:contain;border-radius:9px;background:#fff;padding:2px}
+.main-nav .offcanvas-sub{font-weight:800;font-size:.8rem;color:#fff;margin-left:5px}
 .main-nav .nav-link{color:rgba(255,255,255,.85);padding:11px 18px;display:flex;gap:10px;align-items:center;border-left:3px solid transparent;font-size:.92rem}
 .main-nav .nav-link:hover,.main-nav .nav-link:focus{background:rgba(255,255,255,.1);color:#fff}
 .main-nav .nav-link.active{background:rgba(255,255,255,.16);color:#fff;border-left-color:#ffc107;font-weight:600}
@@ -125,15 +134,12 @@ body{background:#f3f5fb}
   /* Topbar ishikamane juu ya skrini wakati wa scroll kwenye simu (Android/iOS). */
   .topbar{padding:8px 14px;flex-wrap:nowrap;gap:10px;position:sticky;top:0;z-index:1030}
   .topbar-brand{gap:9px}
-  .topbar-logo{width:38px;height:38px;border-radius:10px;padding:0}
-  .topbar-title{font-size:1.06rem;white-space:nowrap}
-  .topbar-sub{font-size:.68rem;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .topbar-sub .mx-2{margin-left:.2rem!important;margin-right:.2rem!important}
+  .topbar-sub{margin-left:6px}
   .topbar>.d-flex{gap:6px!important;flex:0 0 auto}
   .user-chip{max-width:52vw}}
 @media print{.side,.topbar,.no-print{display:none!important}.main{margin-left:0!important}}
 </style></head><body>
-<div class="side"><div class="brand"><img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo"><div class="brand-text"><?php echo h(system_name()); ?></div></div>      <ul class="nav flex-column mt-2">
+<div class="side"><div class="brand"><img class="brand-logo" src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo"><div class="brand-text"><span class="brand-name"><?php echo h($appShort); ?></span></div></div>      <ul class="nav flex-column mt-2">
   <?php foreach ($items as $it): ?>
     <li><a class="nav-link <?php echo ($active === $it[0] || nav_page_is($it[2])) ? 'active' : ''; ?>" href="<?php echo h(url($it[2])); ?>"><i class="bi bi-<?php echo $it[3]; ?>"></i> <span><?php echo h($it[1]); ?></span></a></li>
   <?php endforeach; ?>
@@ -143,9 +149,9 @@ body{background:#f3f5fb}
   <div class="topbar">
     <div class="topbar-brand">
       <button class="topbar-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="Fungua menyu"><i class="bi bi-list"></i></button>
-      <img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo" class="topbar-logo">
+      <?php if ($brandLogo !== ''): ?><img class="brand-logo" src="<?php echo h($brandLogo); ?>" alt="School logo"><?php else: ?><span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span><?php endif; ?>
       <div class="topbar-text">
-        <div class="topbar-title" title="<?php echo h($appName); ?>"><?php echo h($appShort); ?></div>
+        <div class="topbar-title" title="<?php echo h($brandName) . ($brandSub !== '' ? ' ' . h($brandSub) : ''); ?>"><?php echo h($brandName); ?><?php if ($brandSub !== ''): ?><span class="topbar-sub"><?php echo h($brandSub); ?></span><?php endif; ?></div>
         <?php /* Namba ya kituo, wilaya na mkoa hauonyeshwi kwenye topbar. */ ?>
       </div>
     </div>
@@ -162,8 +168,8 @@ body{background:#f3f5fb}
   <?php if ($u && $u['role'] === 'super' && $sc): ?><div class="bg-warning-subtle border-bottom px-4 py-1 small no-print fw-bold">Manage School: <b><?php echo h($sc['name']); ?></b> &middot; <a href="<?php echo h(url('super/dashboard.php?exit=1')); ?>">Back to DSEO Dashboard</a></div><?php endif; ?>
   <div class="offcanvas offcanvas-start main-nav no-print" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
     <div class="offcanvas-header">
-      <img src="<?php echo h(url('assets/img/oasis-logo.png')); ?>" alt="OASIS Logo" class="topbar-logo">
-      <div class="offcanvas-title" id="mobileNavLabel"><?php echo h(system_name()); ?></div>
+      <?php if ($brandLogo !== ''): ?><img class="brand-logo" src="<?php echo h($brandLogo); ?>" alt="School logo"><?php else: ?><span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span><?php endif; ?>
+      <div class="offcanvas-title" id="mobileNavLabel"><?php echo h($brandName); ?><?php if ($brandSub !== ''): ?><span class="offcanvas-sub"><?php echo h($brandSub); ?></span><?php endif; ?></div>
       <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Funga"></button>
     </div>
     <div class="offcanvas-body p-0">

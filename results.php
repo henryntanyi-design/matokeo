@@ -25,7 +25,7 @@ $q = 'exam_id=' . $exam_id . '&class_id=' . $class_id . ($view === 'necta' ? '&v
 layout_start('Matokeo - ' . $exam['name'], $u['role'] !== 'teacher' ? 'exams' : 'results'); ?>
 <style>
 .necta-format {
-    background-color: #F5F5DC;
+    background-color: #fff;
     border-collapse: initial;
     border-color: #71848a #292926 #292926 #71848a;
     border-style: solid;
@@ -44,5 +44,5 @@ layout_start('Matokeo - ' . $exam['name'], $u['role'] !== 'teacher' ? 'exams' : 
 <div class="d-flex gap-2"><a class="btn btn-danger btn-sm" href="<?php echo h(url('export.php?' . $q . '&format=pdf')); ?>" download title="Pakua PDF ya matokeo (muundo wa NECTA - CSEE/ACSEE)"><i class="bi bi-file-earmark-pdf"></i> Download Result</a></div>
 </div></div>
 <?php if (!$d['candidates']): ?><div class="alert alert-warning no-print">Hakuna watahiniwa kwenye darasa hili. Admin asajili watahiniwa kwenye ukurasa wa mtihani.</div><?php endif; ?>
-<div class="card shadow-sm"><div class="card-body necta-format" style="overflow-x:auto;background:#F5F5DC"><?php echo $view === 'necta' ? render_necta_results($d, ['show_names' => true]) : render_necta_results($d, ['show_names' => false]); ?></div></div>
+<div class="card shadow-sm"><div class="card-body necta-format" style="overflow-x:auto;background:#fff"><?php echo $view === 'necta' ? render_necta_results($d, ['show_names' => true]) : render_necta_results($d, ['show_names' => false]); ?></div></div>
 <?php layout_end();

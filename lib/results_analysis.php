@@ -403,7 +403,7 @@ function ra_no_exam() { ?>
 </div></div>
 <?php }
 
-/** Kichwa cha ukurasa + kichaguzi cha mtihani + PDF/Print. */
+/** Kichwa cha ukurasa. */
 function ra_page_head($pageTitle, $icon, $exam, $exam_id, $hasData, $exams, $showBack = true) { ?>
 <div class="ra-head">
   <div>
@@ -413,6 +413,7 @@ function ra_page_head($pageTitle, $icon, $exam, $exam_id, $hasData, $exams, $sho
     <h1 class="ra-title"><i class="bi bi-<?php echo h($icon); ?> me-1"></i><?php echo h($pageTitle); ?></h1>
     <p class="ra-sub"><?php echo h($exam['name']); ?><?php echo $exam['year_name'] ? ' (' . h($exam['year_name']) . ')' : ''; ?> &middot; published results of all schools</p>
   </div>
+  <?php if ($showBack): ?>
   <div class="d-flex flex-wrap align-items-center gap-2">
     <form method="get" class="d-flex align-items-center gap-2">
       <select name="exam_id" class="form-select form-select-sm" style="min-width:230px" onchange="this.form.submit()">
@@ -425,6 +426,7 @@ function ra_page_head($pageTitle, $icon, $exam, $exam_id, $hasData, $exams, $sho
     <a class="btn btn-danger btn-sm no-print" href="?exam_id=<?php echo (int)$exam_id; ?>&export=pdf" download title="Download this section as PDF"<?php echo $hasData ? '' : ' style="pointer-events:none;opacity:.55" aria-disabled="true" tabindex="-1"'; ?>><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</a>
     <button type="button" class="btn btn-outline-secondary btn-sm no-print" onclick="window.print()"<?php echo $hasData ? '' : ' disabled title="Available after the results are published"'; ?>><i class="bi bi-printer me-1"></i>Print</button>
   </div>
+  <?php endif; ?>
 </div>
 <?php if (!$hasData): ?>
   <div class="ra-lock-note"><i class="bi bi-lock-fill"></i><span><b>Results are not published yet.</b> This section becomes active as soon as this exam's results are published.</span></div>

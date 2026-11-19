@@ -5,7 +5,10 @@ require_once __DIR__ . '/lib/grading.php';
 require_once __DIR__ . '/lib/render.php';
 
 $sysName = system_name();
-$logo    = url('assets/img/oasis-logo.png');
+/* Brand ya navbar: jina la shule + "Secondary School" (muted). */
+list($brandName, $brandSub) = school_brand_parts();
+if ($brandName === '') { $brandName = $sysName; $brandSub = ''; }
+$brandLogo = school_logo_src();
 
 $safeAll = function ($sql, $params = []) {
     try { return q_all($sql, $params); } catch (Exception $e) { return []; }
@@ -318,24 +321,34 @@ function pr_table($headers, $rows) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Published exam results - <?php echo h($sysName); ?>">
 <title>Published Results | <?php echo h($sysName); ?></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <style>
-:root{--brand:#0b3d91;--brand2:#2c6ed5;--green:#0f9d6b;--line:#e3e9f5;--mut:#6b7a90;--ink:#16203a;--purple:#800080;--necta-width:1100px}
-body{background:#f6f8fd;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--ink)}
+:root{--brand:#0b3d91;--brand2:#2c6ed5;--brand3:#0f9d6b;--green:#0f9d6b;--line:#e3e9f5;--line2:#edf2fa;--mut:#6b7a90;--mut2:#9aa6bc;--ink:#0f1b33;--ink2:#1f2d4a;--purple:#800080;--radius:18px;--radius-sm:12px;--shadow-sm:0 6px 18px -12px rgba(11,61,145,.25);--shadow-md:0 18px 40px -22px rgba(11,61,145,.35);--shadow-lg:0 30px 70px -30px rgba(6,28,72,.45);--necta-width:1180px;--ease:cubic-bezier(.22,.61,.36,1)}
+body{background:#f6f8fd;font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;display:flex;flex-direction:column;min-height:100vh}
+main.container{flex:1 0 auto}
 a{text-decoration:none}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important}*{transition:none!important}}
 /* Topbar: sticky, glass, upana sawa na content ya main wrapper. */
-.pr-nav{position:sticky;top:0;z-index:1030;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:9px 0;box-shadow:0 12px 30px -26px rgba(11,61,145,.7)}
+.pr-nav{position:sticky;top:0;z-index:1030;background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(16px) saturate(160%);
+  backdrop-filter:blur(16px) saturate(160%);border-bottom:1px solid rgba(226,233,246,.7);padding:10px 0;box-shadow:0 12px 30px -20px rgba(11,61,145,.35);transition:padding .25s var(--ease),box-shadow .25s var(--ease)}
+.pr-nav.scrolled{padding:6px 0}
 .pr-nav:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
   background:linear-gradient(90deg,var(--brand),var(--brand2) 55%,var(--green))}
 .pr-nav>.container,main.container,.pr-foot-bar>.container{width:100%;max-width:var(--necta-width);
   margin-left:auto;margin-right:auto;padding-left:18px;padding-right:18px}
 main.container .container{max-width:none;padding-left:0;padding-right:0}
 .pr-nav .navbar-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--brand);
-  font-size:.9rem;line-height:1.14;letter-spacing:-.01em;margin-right:6px}
-.pr-nav .navbar-brand img{width:38px;height:38px;object-fit:contain;background:#fff;border-radius:11px;padding:3px;
-  box-shadow:0 8px 18px -12px rgba(11,61,145,.85);flex:0 0 auto}
+  line-height:1.14;letter-spacing:.01em;margin-right:6px}
+.pr-nav .navbar-brand>span:not(.brand-icon){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-nav .navbar-brand .brand-icon{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:0 6px 14px -8px rgba(11,61,145,.8)}
+.pr-nav .navbar-brand .brand-logo{flex:0 0 auto;width:34px;height:34px;object-fit:contain;border-radius:9px;background:#fff;padding:2px;box-shadow:0 6px 14px -10px rgba(11,61,145,.9)}
+.pr-nav .navbar-brand .brand-name{font-size:.8rem;font-weight:800;color:#0b3d91}
+.pr-nav .navbar-brand .brand-sub{font-size:.8rem;font-weight:800;color:#0b3d91;margin-left:6px}
 .pr-nav .navbar-nav{gap:4px}
 .pr-nav .nav-link{font-weight:600;color:#4a5872!important;border-radius:999px;padding:8px 14px!important;
   transition:color .18s,background .18s,box-shadow .18s}
@@ -352,22 +365,25 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 .pr-nav .navbar-toggler:focus{box-shadow:0 0 0 3px rgba(44,110,213,.15)}
 .btn-primary{background:var(--brand);border-color:var(--brand)}
 .btn-primary:hover,.btn-primary:focus{background:var(--brand2);border-color:var(--brand2)}
-.pr-head{padding:32px 0 10px}
-.pr-head h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin:0;color:var(--ink)}
-.pr-head p{color:var(--mut);font-size:.9rem;margin:6px 0 0}
-.pr-stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 22px -18px rgba(11,61,145,.6)}
+.pr-head{padding:34px 0 12px}
+.pr-head h1{font-size:1.85rem;font-weight:800;letter-spacing:-.025em;margin:0;color:var(--ink);line-height:1.15}
+.pr-head p{color:var(--mut);font-size:.92rem;margin:8px 0 0;max-width:60ch}
+.pr-stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.pr-stat:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .pr-stat .ic{width:42px;height:42px;flex:0 0 42px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--brand);background:#edf3ff}
 .pr-stat.green .ic{color:#0f7d50;background:#e9f8f1}
 .pr-stat b{font-size:1.32rem;line-height:1;display:block}
 .pr-stat span{font-size:.75rem;color:var(--mut)}
-.pr-card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px -24px rgba(11,61,145,.7);overflow:hidden}
+.pr-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-md);overflow:hidden;transition:box-shadow .2s var(--ease)}
 .pr-filter{padding:16px 18px}
 .pr-filter .form-label{font-size:.74rem;font-weight:700;color:#4a5872;margin-bottom:5px}
-.pr-filter .form-select,.pr-filter .form-control{border-color:var(--line);border-radius:9px;font-size:.87rem;padding:.55rem .75rem;background:#fdfefe}
-.pr-toolbar{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#fcfdff}
+.pr-filter .form-select,.pr-filter .form-control{border-color:var(--line);border-radius:10px;font-size:.88rem;padding:.6rem .8rem;background:#fdfefe;transition:border-color .18s,box-shadow .18s}
+.pr-filter .form-select:focus,.pr-filter .form-control:focus{border-color:#8fb4ea;box-shadow:0 0 0 3px rgba(44,110,213,.12);outline:0}
+.pr-toolbar{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#fcfdff 0%,#f7faff 100%)}
 .pr-toolbar .total{font-size:.86rem;color:var(--mut)}
 .pr-toolbar .total b{color:var(--ink)}
-.table thead th{background:#f6f8fd;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;color:#5b6b85;border-bottom:1px solid var(--line)}
+.table thead th{background:#f6f8fd;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;color:#5b6b85;border-bottom:1px solid var(--line);font-weight:700;padding:12px 14px}
+.table td{padding:12px 14px}
 .table td{font-size:.87rem;vertical-align:middle}
 .table-hover tbody tr:hover{background:#f8fbff}
 .nowrap{white-space:nowrap}
@@ -379,7 +395,7 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 .pr-scope-district{color:#0b3d91;background:#eaf1ff;border-color:#cfe0ff}
 .pr-scope-regional{color:#5b2bb8;background:#f1ebff;border-color:#ddd0fb}
 .pr-scope-school{color:#12734a;background:#eaf7f0;border-color:#cfeee0}
-.pr-title-card{padding:20px 22px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,#fff 55%,#f4f8ff)}
+.pr-title-card{padding:22px 24px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,#fff 55%,#f4f8ff)}
 .pr-title-card h2{font-size:1.25rem;font-weight:800;margin:0 0 6px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:.71rem;font-weight:700;border:1px solid var(--line);background:#fff;color:#4a5872;border-radius:999px;padding:4px 10px;margin:0 6px 4px 0}
 .chip i{color:var(--brand)}
@@ -396,20 +412,40 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 /* Shared width for the NECTA filter and the result sections below it */
 .ms-wide{width:100%;max-width:var(--necta-width);margin-left:auto;margin-right:auto}
 .ms-wide .ms-section-title{text-align:center}
-.necta-filter{margin:14px auto 18px;text-align:center;font-family:Arial,Helvetica,sans-serif}
-.necta-caption{font-size:13px;font-weight:700;color:#800080;margin-bottom:7px}
-.necta-alpha{width:100%;border-collapse:collapse;margin:0 auto;table-layout:fixed}
-.necta-alpha td{border:2px solid #fff!important;padding:3px 1px;height:25px;vertical-align:middle;font-weight:700;font-size:11px}
-.necta-alpha td.all{width:11%}
-.necta-alpha td.ltr{width:3.34%}
-.necta-alpha td.all{background:#90ee90}
-.necta-alpha td.ltr{background:#add8e6}
-.necta-alpha td.empty{opacity:.42}
-.necta-alpha td.active{background:#ffe87a;outline:2px solid #800080;outline-offset:-2px}
-.necta-alpha a{color:#0000ee!important;text-decoration:underline!important;display:block;overflow:hidden;text-overflow:clip}
-.necta-alpha a:hover{color:#800080!important}
+.alpha-filter{margin:16px auto 22px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.alpha-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-bottom:12px}
+.alpha-title{font-size:.82rem;font-weight:800;color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.alpha-title i{color:var(--brand2)}
+.alpha-hint{font-size:.72rem;color:var(--mut)}
+.alpha-row{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.alpha-row::-webkit-scrollbar{height:5px}
+.alpha-row::-webkit-scrollbar-thumb{background:#c9d8ef;border-radius:999px}
+.alpha-pill{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:34px;padding:0 9px;border-radius:10px;font-size:.8rem;font-weight:700;color:var(--brand);background:#f1f6ff;border:1px solid #dbe7ff;transition:background .16s,color .16s,border-color .16s,transform .16s,box-shadow .16s}
+.alpha-pill:hover{background:var(--brand2);color:#fff;border-color:var(--brand2);transform:translateY(-1px)}
+.alpha-pill.active{background:linear-gradient(135deg,var(--brand2),var(--brand));color:#fff;border-color:transparent;box-shadow:0 8px 18px -10px rgba(11,61,145,.9)}
+.alpha-all{padding:0 16px}
+.alpha-pill.empty{opacity:.38;background:#f7f9fd;color:var(--mut);border-color:var(--line2)}
+.alpha-pill.empty:hover{opacity:.7;transform:none;background:#eef3fb;color:var(--mut);border-color:var(--line)}
+/* Overall results tab bar */
+.ovr-bar{position:relative;background:linear-gradient(120deg,#ffffff 0%,#f3f8ff 100%);border:1px solid var(--line);border-radius:20px;padding:16px 18px 16px 24px;box-shadow:var(--shadow-sm);display:flex;flex-wrap:wrap;align-items:center;gap:14px;overflow:hidden}
+.ovr-bar:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--brand2),var(--brand3))}
+.ovr-title{display:inline-flex;align-items:center;gap:9px;font-size:.74rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--brand);background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 8px;white-space:nowrap;box-shadow:0 6px 14px -12px rgba(11,61,145,.7)}
+.ovr-title i{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:.8rem;color:#fff;background:linear-gradient(135deg,var(--brand2),var(--brand))}
+.ovr-tabs{display:flex;flex-wrap:wrap;gap:7px;flex:1 1 auto}
+.ovr-tab{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#46536b;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 14px;transition:background .16s,color .16s,border-color .16s,transform .16s,box-shadow .16s}
+.ovr-tab:hover{color:var(--brand);background:#f4f9ff;border-color:#cfe0ff;transform:translateY(-2px);box-shadow:0 10px 20px -16px rgba(11,61,145,.7)}
+.ovr-tab.active{color:#fff;background:linear-gradient(135deg,var(--brand2),var(--brand));border-color:transparent;box-shadow:0 10px 22px -12px rgba(11,61,145,.95),inset 0 0 0 1px rgba(255,255,255,.14)}
+.ovr-tab i{font-size:.92rem;opacity:.9}
+.ovr-csv{color:#0f7d50;background:#eaf9f1;border-color:#c8ecd9}
+.ovr-csv:hover{color:#fff;background:linear-gradient(135deg,#12b981,#0f9d6b);border-color:transparent}
 /* NECTA-style school result sheet */
-.necta-sheet{padding:16px 18px;background:#add8e6;color:#000080;font-family:Arial,Helvetica,sans-serif}
+/* NECTA-style school result sheet */
+.sheet-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.sheet-label{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:800;color:var(--ink)}
+.sheet-label i{color:var(--brand2)}
+.sheet-pdf-btn{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#ef5350,#c62828);border-radius:10px;padding:9px 16px;box-shadow:0 10px 20px -12px rgba(198,40,40,.9);transition:transform .16s,filter .16s}
+.sheet-pdf-btn:hover{color:#fff;transform:translateY(-1px);filter:brightness(1.06)}
+.necta-sheet{padding:16px 18px;background:#add8e6;color:#000080;font-family:Arial,Helvetica,sans-serif;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .gov-header{text-align:center;margin:0 0 16px;color:#800080;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase}
 .gov-header div{font-size:20px;font-weight:700;line-height:1.4}
 .gov-header .gov-exam{font-size:20px;margin-top:7px}
@@ -420,7 +456,8 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 .necta-table.summary{width:40%;min-width:320px;font-family:"Courier New",Courier,monospace;font-size:12px}
 .necta-table.cands{width:100%;border-collapse:separate;border-spacing:2px;font-family:Arial,Helvetica,sans-serif;font-size:11px}
 .necta-table.cands th,.necta-table.cands td{border:1px solid #000080;padding:2px 5px}
-.necta-table.cands th.subj,.necta-table.cands td.subj{text-align:left;white-space:normal}
+.necta-table.cands{min-width:640px}
+.necta-table.cands th.subj,.necta-table.cands td.subj{text-align:left;white-space:normal;word-break:break-word}
 /* Centre summary below the candidate results */
 .necta-summary{margin-top:18px}
 .necta-summary .necta-table{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:11px;border-collapse:collapse}
@@ -429,46 +466,70 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 .necta-summary .perf th,.necta-summary .perf td{padding:2px 5px}
 .necta-summary .perf .subjname{text-align:left}
 .necta-summary .lvl{display:inline-block;padding:1px 5px;font-size:10px;white-space:nowrap}
+/* Exam detail header banner */
+.pr-exam-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:16px 0 22px;padding:18px 22px;border-radius:20px;
+  background:radial-gradient(520px 240px at 92% 10%,rgba(15,157,107,.32),transparent 60%),linear-gradient(135deg,#0a3a89,#2c6ed5);
+  box-shadow:var(--shadow-md);color:#fff;position:relative;overflow:hidden;isolation:isolate}
+.pr-exam-head:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.4;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.18) 1px,transparent 1px);background-size:22px 22px}
+.pr-back-btn{display:inline-flex;align-items:center;gap:6px;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
+  border-radius:999px;padding:8px 16px;font-weight:700;font-size:.82rem;transition:background .18s,transform .18s;flex:0 0 auto}
+.pr-back-btn:hover{background:rgba(255,255,255,.26);color:#fff;transform:translateY(-1px)}
+.pr-exam-titles{flex:1 1 auto;min-width:0;text-align:center;padding:2px 8px}
+.pr-exam-kicker{display:inline-flex;align-items:center;gap:6px;font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+.pr-exam-titles h1{color:#fff!important;font-size:clamp(1.05rem,2.3vw,1.5rem);font-weight:800;margin:5px 0 0;letter-spacing:-.01em;line-height:1.22}
+.pr-exam-right{flex:0 0 auto;display:flex;gap:8px}
 /* MSSIS detail styling */
 .ms-title{color:var(--purple);font-weight:700}
 .ms-authority{font-family:"Times New Roman",Times,serif;color:var(--purple);text-align:center}
 .ms-authority h4{font-weight:700;margin:0 0 2px}
 .ms-link{color:#0000EE!important;text-decoration:underline!important}
-.ms-centre td{background:#f8fafc;border:2px solid #fff!important;padding:4px 6px;font-size:12px;font-family:Arial,Helvetica,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:16px;vertical-align:middle}
-.ms-centre td.c0{background:#c7e6f5}.ms-centre td.c1{background:#f7c4d1}.ms-centre td.c2{background:#bdf0b8}
-.ms-centre a{display:block;text-decoration:underline!important;color:#0000ee!important;overflow:hidden;text-overflow:ellipsis}
+.centre-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.centre-card{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;transition:transform .18s var(--ease),box-shadow .18s var(--ease),border-color .18s var(--ease)}
+.centre-card:hover{transform:translateY(-2px);border-color:#b9cdf0;box-shadow:0 14px 28px -20px rgba(11,61,145,.6)}
+.centre-ic{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e9f1ff,#f6faff);color:var(--brand);font-size:.95rem;transition:transform .3s var(--ease)}
+.centre-card:hover .centre-ic{transform:scale(1.08) rotate(-4deg)}
+.centre-name{flex:1 1 auto;min-width:0;font-size:.76rem;font-weight:700;color:var(--ink);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.centre-go{color:var(--brand2);font-size:.85rem;flex:0 0 auto;opacity:.55;transition:opacity .18s,transform .18s}
+.centre-card:hover .centre-go{opacity:1;transform:translate(1px,-1px)}
+@media (max-width:991px){.centre-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:479px){.centre-grid{grid-template-columns:1fr}}
 .ms-section-title{font-weight:700;color:#6c757d}
 .ms-report h4{font-size:1.05rem}
 @media (max-width:767px){
+  .necta-sheet{padding:12px 10px}
+  .gov-header div{font-size:15px}
+  .gov-header .gov-exam,.gov-header .gov-school{font-size:15px}
+  .necta-table.summary{min-width:280px}
+  .sheet-toolbar{align-items:flex-start}
   .pr-head{padding:22px 0 6px}
   .pr-head h1{font-size:1.4rem}
   .pr-nav{padding:7px 0}
   .pr-nav>.container,main.container,.pr-foot-bar>.container{padding-left:14px;padding-right:14px}
   .pr-foot-bar{margin-top:26px}
   .pr-foot-bar .foot-links{width:100%}
-  .pr-nav .navbar-brand{font-size:.76rem;gap:8px;max-width:calc(100% - 62px)}
-  .pr-nav .navbar-brand img{width:34px;height:34px;border-radius:9px}
-  .pr-nav .navbar-brand span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pr-nav .navbar-brand{gap:8px;max-width:calc(100% - 62px)}
+  .pr-nav .navbar-brand .brand-icon{width:28px;height:28px;border-radius:8px;font-size:.9rem}
+  .pr-nav .navbar-brand .brand-logo{width:30px;height:30px;border-radius:8px}
   .table td,.table th{padding:9px 10px}
 }
-@media print{.pr-nav,.no-print{display:none!important}body{background:#fff}.pr-card{border:0;box-shadow:none}.pr-head{padding-top:0}.ms-report{font-size:.85rem}}
+@media print{.pr-nav,.no-print{display:none!important}body{background:#fff}.pr-card{border:0;box-shadow:none}.pr-head{padding-top:0}.ms-report{font-size:.85rem}.pr-exam-head{background:#fff!important;box-shadow:none!important;padding:0;margin:0 0 10px}.pr-exam-titles h1{color:#000!important}.pr-exam-kicker{color:#555}}
 </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg pr-nav no-print">
+<nav class="navbar navbar-expand-lg pr-nav no-print" id="prNavBar">
   <div class="container">
     <a class="navbar-brand" href="<?php echo h(url('index.php')); ?>">
-      <img src="<?php echo h($logo); ?>" alt="Logo"><span><?php echo h($sysName); ?></span>
+      <?php if ($brandLogo !== ''): ?><img class="brand-logo" src="<?php echo h($brandLogo); ?>" alt="School logo"><?php else: ?><span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span><?php endif; ?>
+      <span><span class="brand-name"><?php echo h($brandName); ?></span><?php if ($brandSub !== ''): ?><span class="brand-sub"><?php echo h($brandSub); ?></span><?php endif; ?></span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#prNav" aria-controls="prNav" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="prNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
         <li class="nav-item"><a class="nav-link" href="<?php echo h(url('index.php')); ?>"><i class="bi bi-house-door me-1"></i>Home</a></li>
-        <li class="nav-item"><a class="nav-link active" aria-current="page" href="<?php echo h(url('public_results.php')); ?>"><i class="bi bi-bar-chart-line me-1"></i>Public Results</a></li>
-        <li class="nav-item"><a class="nav-link" href="<?php echo h(url('index.php#about')); ?>"><i class="bi bi-info-circle me-1"></i>About</a></li>
       </ul>
       <div class="d-flex flex-wrap gap-2 mt-2 mt-lg-0">
         <a class="btn btn-outline-primary" href="<?php echo h(url('login.php?t=student')); ?>"><i class="bi bi-person-badge me-1"></i>Student Portal</a>
@@ -480,22 +541,20 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 
 <main class="container pb-3">
 <?php if ($exam): ?>
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 mb-3 no-print">
-    <a class="btn btn-outline-secondary btn-sm" href="<?php echo h(url('public_results.php')); ?>"><i class="bi bi-arrow-left me-1"></i>Published Results</a>
-    <div class="d-flex gap-2">
-      <?php if ($view !== ''): ?><a class="btn btn-outline-primary btn-sm" href="<?php echo h($du()); ?>"><i class="bi bi-grid me-1"></i>Centre Results</a><?php endif; ?>
-      <button class="btn btn-outline-dark btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print / Save PDF</button>
+  <div class="pr-exam-head">
+    <a class="pr-back-btn no-print" href="<?php echo h(url('public_results.php')); ?>"><i class="bi bi-arrow-left"></i>Published Results</a>
+    <div class="pr-exam-titles">
+      <h1 class="ms-title"><?php
+        echo h($exam['name']);
+        if (!empty($exam['start_date']) && $exam['start_date'] !== '0000-00-00') echo '&nbsp;&nbsp;' . h(date('d M Y', strtotime($exam['start_date'])));
+      ?></h1>
+    </div>
+    <div class="pr-exam-right no-print">
+      <?php if ($view !== ''): ?><a class="pr-back-btn" href="<?php echo h($du()); ?>"><i class="bi bi-grid"></i>Centre Results</a><?php endif; ?>
     </div>
   </div>
 
   <div class="container mb-5">
-    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 ms-wide">
-      <h1 class="ms-title h4 mb-3"><?php
-        echo h($exam['name']);
-        if (!empty($exam['start_date']) && $exam['start_date'] !== '0000-00-00') echo '&nbsp;&nbsp;' . h(date('d M Y', strtotime($exam['start_date'])));
-      ?></h1>
-      <button class="btn btn-primary btn-sm fw-bold" type="button" id="msCopyLink"><span class="me-2">Copy Link</span><i class="bi bi-share"></i></button>
-    </div>
 
     <?php
       /* Centre initials that actually have published results, for the letter filter */
@@ -505,31 +564,33 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
           if ($ini >= 'A' && $ini <= 'Z') $letterCounts[$ini] = (isset($letterCounts[$ini]) ? $letterCounts[$ini] : 0) + 1;
       }
     ?>
-    <div class="necta-filter ms-wide no-print">
-      <div class="necta-caption">CLICK ANY LETTER BELOW TO FILTER CENTRES BY ALPHABET</div>
-      <table class="necta-alpha"><tr>
-        <td class="all<?php echo $letter === '' ? ' active' : ''; ?>"><a href="<?php echo h($du(['letter' => '', 'view' => ''])); ?>">ALL CENTRES</a></td>
+    <?php if ($view !== 'school'): ?>
+    <div class="alpha-filter ms-wide no-print">
+      <div class="alpha-head">
+        <span class="alpha-title"><i class="bi bi-funnel-fill"></i>Filter centres by alphabet</span>
+        <span class="alpha-hint">Tap a letter to narrow the list</span>
+      </div>
+      <div class="alpha-row">
+        <a class="alpha-pill alpha-all<?php echo $letter === '' ? ' active' : ''; ?>" href="<?php echo h($du(['letter' => '', 'view' => ''])); ?>"><i class="bi bi-grid-3x3-gap-fill me-1"></i>All centres</a>
         <?php for ($i = 0; $i < 26; $i++): $ch = chr(65 + $i); ?>
-          <td class="ltr<?php echo $letter === $ch ? ' active' : ''; ?><?php echo isset($letterCounts[$ch]) ? '' : ' empty'; ?>">
-            <a href="<?php echo h($du(['letter' => $ch, 'view' => ''])); ?>"><?php echo $ch; ?></a>
-          </td>
+          <a class="alpha-pill<?php echo $letter === $ch ? ' active' : ''; ?><?php echo isset($letterCounts[$ch]) ? '' : ' empty'; ?>" href="<?php echo h($du(['letter' => $ch, 'view' => ''])); ?>"><?php echo $ch; ?></a>
         <?php endfor; ?>
-      </tr></table>
+      </div>
     </div>
+    <?php endif; ?>
 
     <?php if (!$classId): ?>
       <div class="alert alert-info">Please choose a class first.</div>
     <?php else: ?>
       <?php if ($view !== ''): ?>
-        <div class="mb-3 ms-wide">
-          <p class="ms-section-title">Overall Results</p>
-          <div class="row mx-0 mb-3 justify-content-center">
-            <div class="col-auto mb-2"><a class="btn btn-sm text-primary fw-bold" href="<?php echo h($du(['view' => 'rank'])); ?>">Schools Ranking</a></div>
-            <div class="col-auto mb-2"><a class="btn btn-sm text-primary fw-bold" href="<?php echo h($du(['view' => 'general'])); ?>">General Schools' Results</a></div>
-            <div class="col-auto mb-2"><a class="btn btn-sm text-primary fw-bold" href="<?php echo h($du(['view' => 'subjects'])); ?>">Subjects Ranking</a></div>
-            <div class="col-auto mb-2"><a class="btn btn-sm text-primary fw-bold" href="<?php echo h($du(['view' => 'grades'])); ?>">Grades Analysis Subjectwise</a></div>
-            <div class="col-auto mb-2"><a class="btn btn-sm text-primary fw-bold" href="<?php echo h($du(['view' => 'best'])); ?>">Overall Ten Students</a></div>
-            <div class="col-auto mb-2"><a class="btn btn-sm text-primary fw-bold" href="<?php echo h($du(['export' => 'csv'])); ?>">Download CSV</a></div>
+        <div class="ovr-bar ms-wide mb-3">
+          <span class="ovr-title"><i class="bi bi-bar-chart-fill"></i>Overall Results</span>
+          <div class="ovr-tabs">
+            <a class="ovr-tab<?php echo $view === 'rank' ? ' active' : ''; ?>" href="<?php echo h($du(['view' => 'rank'])); ?>"><i class="bi bi-trophy"></i>Schools Ranking</a>
+            <a class="ovr-tab<?php echo $view === 'general' ? ' active' : ''; ?>" href="<?php echo h($du(['view' => 'general'])); ?>"><i class="bi bi-table"></i>General Schools' Results</a>
+            <a class="ovr-tab<?php echo $view === 'subjects' ? ' active' : ''; ?>" href="<?php echo h($du(['view' => 'subjects'])); ?>"><i class="bi bi-journal-check"></i>Subjects Ranking</a>
+            <a class="ovr-tab<?php echo $view === 'grades' ? ' active' : ''; ?>" href="<?php echo h($du(['view' => 'grades'])); ?>"><i class="bi bi-bar-chart-steps"></i>Grades Analysis Subjectwise</a>
+            <a class="ovr-tab<?php echo $view === 'best' ? ' active' : ''; ?>" href="<?php echo h($du(['view' => 'best'])); ?>"><i class="bi bi-star"></i>Overall Ten Students</a>
           </div>
         </div>
       <?php endif; ?>
@@ -539,6 +600,10 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
           $d = $schoolResults[$schoolViewId];
           $sheetLines = pr_sheet_header_lines($d);
         ?>
+        <div class="sheet-toolbar ms-wide no-print">
+          <span class="sheet-label"><i class="bi bi-file-earmark-text"></i>Official result sheet</span>
+          <a class="sheet-pdf-btn" href="<?php echo h($du(['view' => 'school', 'school_id' => $schoolViewId, 'export' => 'pdf'])); ?>"><i class="bi bi-file-earmark-pdf"></i>Download PDF</a>
+        </div>
         <div class="necta-sheet ms-wide">
           <div class="gov-header">
             <div><?php echo h($sheetLines[0]); ?></div>
@@ -717,33 +782,19 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 
       <?php else: ?>
         <div class="ms-wide">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-          <p class="ms-section-title mb-0">Centre Results (<?php echo count($pubSchools); ?>)</p>
-          <a class="btn btn-sm text-danger fw-bold no-print" href="<?php echo h($du(['export' => 'pdf'])); ?>"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</a>
-        </div>
-        <input type="text" class="form-control mb-2 no-print" id="msCentreSearch" placeholder="Search centres by name or number">
         <?php if (!$pubSchools): ?>
           <p class="text-muted fst-italic">No published centres for this class.</p>
         <?php else: ?>
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered ms-centre"><tbody>
-            <?php
-              $chunks = array_chunk($pubSchools, 3);
-              foreach ($chunks as $chunk) {
-                  echo '<tr>';
-                  for ($i = 0; $i < 3; $i++) {
-                      $sc = isset($chunk[$i]) ? $chunk[$i] : null;
-                      echo '<td class="c' . $i . '">';
-                      if ($sc) {
-                          $label = pr_school_label($sc['centre_no'] ?? '', $sc['name'] ?? '');
-                          echo '<a class="ms-link" data-centre="' . h($label) . '" href="' . h($du(['view' => 'school', 'school_id' => (int)$sc['id']])) . '">' . h($label) . '</a>';
-                      }
-                      echo '</td>';
-                  }
-                  echo '</tr>';
-              }
+          <div class="centre-grid">
+            <?php foreach ($pubSchools as $sc):
+              $label = pr_school_label($sc['centre_no'] ?? '', $sc['name'] ?? '');
             ?>
-            </tbody></table>
+              <a class="centre-card" data-centre="<?php echo h($label); ?>" data-pdf="<?php echo h($du(['view' => 'school', 'school_id' => (int)$sc['id'], 'export' => 'pdf'])); ?>" href="<?php echo h($du(['view' => 'school', 'school_id' => (int)$sc['id']])); ?>">
+                <span class="centre-ic"><i class="bi bi-building"></i></span>
+                <span class="centre-name"><?php echo h($label); ?></span>
+                <i class="bi bi-arrow-up-right centre-go"></i>
+              </a>
+            <?php endforeach; ?>
           </div>
         <?php endif; ?>
         </div>
@@ -755,14 +806,7 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
   <div class="pr-head d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>
       <h1>Published Results</h1>
-      <p>Browse exams and results published by schools and the district office.</p>
     </div>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="pr-stat"><span class="ic"><i class="bi bi-journal-text"></i></span><div><b><?php echo (int)$total; ?></b><span>Published exams</span></div></div></div>
-    <div class="col-md-4"><div class="pr-stat green"><span class="ic"><i class="bi bi-buildings"></i></span><div><b><?php echo (int)$statSchools; ?></b><span>Schools with results</span></div></div></div>
-    <div class="col-md-4"><div class="pr-stat"><span class="ic"><i class="bi bi-people"></i></span><div><b><?php echo (int)$statCandidates; ?></b><span>Candidates with results</span></div></div></div>
   </div>
 
   <div class="pr-card mb-3 no-print">
@@ -800,13 +844,9 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
   </div>
 
   <div class="pr-card">
-    <div class="pr-toolbar no-print">
-      <div class="total">Total: <b><?php echo (int)$total; ?></b> exams</div>
-      <a class="btn btn-outline-success btn-sm" href="<?php echo h(pr_page_url(['year' => $year, 'type' => $type, 'search' => $search, 'export' => 'csv'])); ?>"><i class="bi bi-download me-1"></i>Export CSV</a>
-    </div>
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
-        <thead><tr><th>S/N</th><th>Name</th><th>Type</th><th>Date</th><th class="text-end">Action</th></tr></thead>
+        <thead><tr><th class="text-center">S/N</th><th class="text-center">Name</th><th class="text-center">Type</th><th class="text-center">Date</th><th class="text-center">Action</th></tr></thead>
         <tbody>
         <?php if (!$exams): ?>
           <tr><td colspan="5" class="pr-empty"><i class="bi bi-inbox"></i>No exams published yet. Results will appear here once schools publish them.</td></tr>
@@ -828,9 +868,7 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
               <span class="chip" style="margin-top:5px"><i class="bi bi-building"></i><?php echo (int)$e['schools']; ?> school<?php echo (int)$e['schools'] === 1 ? '' : 's'; ?></span>
             </td>
             <?php $scope = pr_exam_scope($e); ?>
-            <td><span class="pr-scope <?php echo $scope[1]; ?>"><?php echo h($scope[0]); ?></span>
-              <?php if (!empty($e['exam_type'])): ?><div class="pr-meta"><?php echo h($e['exam_type']); ?></div><?php endif; ?>
-            </td>
+            <td><span class="pr-scope <?php echo $scope[1]; ?>"><?php echo h(strtoupper(trim((!empty($e['exam_type']) ? $e['exam_type'] . ' - ' : '') . $scope[0]))); ?></span></td>
             <td class="nowrap"><?php echo h($dateText); ?></td>
             <td class="text-end"><a class="btn btn-sm btn-primary fw-bold" href="<?php echo h(url('public_results.php?exam_id=' . (int)$e['id'])); ?>"><i class="bi bi-eye me-1"></i>View Results</a></td>
           </tr>
@@ -865,44 +903,38 @@ main.container .container{max-width:none;padding-left:0;padding-right:0}
 </main>
 
 <footer class="pr-foot-bar no-print">
-  <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <span>&copy; <?php echo h(date('Y')); ?> <?php echo h($sysName); ?> <span class="note d-none d-sm-inline">&middot; All exam results are processed automatically.</span></span>
-    <span class="foot-links d-flex flex-wrap align-items-center">
-      <a href="<?php echo h(url('index.php')); ?>"><i class="bi bi-house-door me-1"></i>Home</a>
-      <span class="sep">&middot;</span>
-      <a href="<?php echo h(url('login.php?t=student')); ?>"><i class="bi bi-person-badge me-1"></i>Student Portal</a>
-      <span class="sep">&middot;</span>
-      <a href="<?php echo h(url('login.php')); ?>"><i class="bi bi-box-arrow-in-right me-1"></i>Sign in</a>
-      <span class="sep">&middot;</span>
-      <a href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Back to top <i class="bi bi-arrow-up"></i></a>
-    </span>
+  <div class="container text-center">
+    <span>&copy; <?php echo h(date('Y')); ?> <?php echo h($sysName); ?></span>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 (function () {
-  var copy = document.getElementById('msCopyLink');
-  if (copy) copy.addEventListener('click', function () {
-    var done = function () { this.innerHTML = '<span class="me-2">Copied!</span><i class="bi bi-check2"></i>'; };
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href).then(done.bind(this)).catch(function () {});
-    } else {
-      var t = document.createElement('textarea'); t.value = window.location.href;
-      document.body.appendChild(t); t.select();
-      try { document.execCommand('copy'); done.call(copy); } catch (e) {}
-      document.body.removeChild(t);
-    }
-  });
+  var nav = document.getElementById('prNavBar');
+  if (nav) {
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 12); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+})();
 
-  var centreSearch = document.getElementById('msCentreSearch');
-  if (centreSearch) centreSearch.addEventListener('input', function () {
-    var q = this.value.trim().toLowerCase();
-    var links = document.querySelectorAll('.ms-centre a[data-centre]');
-    for (var i = 0; i < links.length; i++) {
-      var show = links[i].getAttribute('data-centre').toLowerCase().indexOf(q) !== -1;
-      links[i].style.visibility = show ? 'visible' : 'hidden';
-    }
+/* On phones, tapping a centre card downloads that school's result PDF.
+   On larger screens the card keeps its normal navigation. */
+(function () {
+  var cards = document.querySelectorAll('.centre-card[data-pdf]');
+  if (!cards.length) return;
+  var isPhone = function () {
+    return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+  };
+  Array.prototype.forEach.call(cards, function (card) {
+    card.addEventListener('click', function (e) {
+      if (isPhone()) {
+        e.preventDefault();
+        var pdf = card.getAttribute('data-pdf');
+        if (pdf) window.location.href = pdf;
+      }
+    });
   });
 })();
 </script>
@@ -950,7 +982,7 @@ if (($_GET['export'] ?? '') === 'pdf') {
     $title = $exam
         ? ($isSheet ? pr_school_label($schoolResults[$schoolViewId]['school']['necta_no'], $schoolResults[$schoolViewId]['school']['school_name']) : $exam['name'])
         : 'Published Results';
-    $file = $exam ? ($isSheet ? 'results-centre-' . (int)$schoolViewId : 'results-exam-' . (int)$examId) : 'published-results';
+    $file = $exam ? ($isSheet ? pr_school_label($schoolResults[$schoolViewId]['school']['necta_no'], $schoolResults[$schoolViewId]['school']['school_name']) : 'results-exam-' . (int)$examId) : 'published-results';
 
     send_pdf($pdfCss . $style . $inner, $title, $file, true);
     exit();
